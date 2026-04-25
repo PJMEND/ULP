@@ -217,9 +217,9 @@ function solvePunching(bx, by, Bx, By, hF, cov, phiMM, rhoL_pct, VEd_kN, sigmaMo
   if (d <= 0.01) return { error: "Altura útil d ≤ 0.01 m.\nVerifique h, recobrimento e diâmetro da armadura." };
   const d_mm = d * 1000;
 
-  /* 45° approach: critical section at d from column face (rectangular perimeter) */
-  const u_crit = 2 * (bx + by) + 8 * d;          // m
-  const A_crit = (bx + 2 * d) * (by + 2 * d);    // m²
+  /* EC2 basic control perimeter at d from column face — 4 quarter-circles at corners */
+  const u_crit = 2 * (bx + by) + 2 * Math.PI * d;               // m  (EN 1992-1-1 §6.4.2)
+  const A_crit = bx * by + 2 * (bx + by) * d + Math.PI * d * d; // m²
   const A_foot = Bx * By;                          // m²
 
   /* Soil pressure */
@@ -332,10 +332,10 @@ function FootingDiagram({ bxCol, byCol, Bx, By, hFoot, result }) {
       {/* Area inside critical perimeter (lighter) */}
       <g clipPath="url(#footPlanClip)">
         <rect x={cxP - dS} y={cyP - dS} width={cW + 2*dS} height={cH + 2*dS}
-          fill="rgba(255,255,255,0.72)" stroke="none"/>
-        {/* Critical perimeter line */}
+          rx={dS} ry={dS} fill="rgba(255,255,255,0.72)" stroke="none"/>
+        {/* Critical perimeter — EC2 rounded corners (quarter-circles radius d) */}
         <rect x={cxP - dS} y={cyP - dS} width={cW + 2*dS} height={cH + 2*dS}
-          fill="none" stroke="#c0392b" strokeWidth={1.5} strokeDasharray="5,3"/>
+          rx={dS} ry={dS} fill="none" stroke="#c0392b" strokeWidth={1.5} strokeDasharray="5,3"/>
       </g>
 
       {/* Column (hatched) */}
@@ -803,12 +803,12 @@ function App() {
                   </div>
                 )}
 
-                <div className="section-label">Perímetro crítico (45° — secção a d da face)</div>
-                <Row name="u_crit = 2(b_x + b_y) + 8d"
-                  sub={`= 2(${(+bxCol).toFixed(2)} + ${(+byCol).toFixed(2)}) + 8×${punchResult.d.toFixed(3)}`}
+                <div className="section-label">Perímetro crítico (secção a d da face — quartos de círculo nas arestas)</div>
+                <Row name="u₁ = 2(b_x + b_y) + 2πd"
+                  sub={`= 2(${(+bxCol).toFixed(2)} + ${(+byCol).toFixed(2)}) + 2π×${punchResult.d.toFixed(3)}`}
                   value={punchResult.u_crit.toFixed(3)} unit="m"/>
-                <Row name="A_crit = (b_x + 2d)(b_y + 2d)"
-                  sub={`= (${(+bxCol+2*punchResult.d).toFixed(3)}) × (${(+byCol+2*punchResult.d).toFixed(3)})`}
+                <Row name="A_crit = b_x·b_y + 2(b_x+b_y)·d + π·d²"
+                  sub={`= ${(+bxCol).toFixed(2)}×${(+byCol).toFixed(2)} + 2(${(+bxCol).toFixed(2)}+${(+byCol).toFixed(2)})×${punchResult.d.toFixed(3)} + π×${punchResult.d.toFixed(3)}²`}
                   value={punchResult.A_crit.toFixed(4)} unit="m²"/>
                 <Row name="A_sapata = B_x × B_y" value={punchResult.A_foot.toFixed(3)} unit="m²"/>
 
@@ -857,7 +857,7 @@ function App() {
                   ok={punchResult.ok_col} err={!punchResult.ok_col}/>
 
                 <div className="ec2-note">
-                  Método do cone a 45° — secção crítica a d da face do pilar · Carga centrada (β = 1.0) ·
+                  Perímetro de controlo a d da face do pilar com quartos de círculo nas arestas (EC2 §6.4.2) · Carga centrada (β = 1.0) ·
                   C<sub>Rd,c</sub> = 0.18/γ<sub>c</sub> = 0.12 · ρ<sub>l</sub> limitado a 2% ·
                   Referência: EN 1992-1-1, §6.4
                 </div>
