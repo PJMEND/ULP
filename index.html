@@ -20,24 +20,20 @@ input, select, button { font-family: Georgia, 'Times New Roman', serif; font-siz
 
 .page { max-width: 980px; margin: 0 auto; padding: 28px 16px 48px; }
 
-/* Header */
 .header { border-bottom: 2px solid #1a1e2e; padding-bottom: 12px; margin-bottom: 24px; }
 .header-top { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
 .header-code { font-size: 11px; font-family: monospace; color: #555; letter-spacing: 0.08em; border: 1px solid #ccc; padding: 2px 8px; border-radius: 3px; }
 h1 { font-size: 20px; font-weight: normal; color: #1a1e2e; }
 .header-sub { font-size: 12px; color: #666; margin-top: 4px; font-family: Arial, sans-serif; }
 
-/* Mode toggle */
 .mode-row { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid #1a1e2e; border-radius: 4px; overflow: hidden; width: fit-content; }
 .mode-btn { padding: 8px 24px; background: #fff; color: #1a1e2e; border: none; cursor: pointer; font-size: 13px; transition: background 0.1s; border-right: 1px solid #1a1e2e; font-family: Arial, sans-serif; }
 .mode-btn:last-child { border-right: none; }
 .mode-btn.active { background: #1a1e2e; color: #fff; }
 
-/* Layout */
 .layout { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
 @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
 
-/* Panels */
 .panel { background: #fff; border: 1px solid #d0d4dc; border-radius: 6px; padding: 18px; margin-bottom: 16px; }
 .panel-title {
   font-size: 11px; font-family: Arial, sans-serif; font-weight: bold;
@@ -45,7 +41,6 @@ h1 { font-size: 20px; font-weight: normal; color: #1a1e2e; }
   margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid #e8eaed;
 }
 
-/* Fields */
 .field { margin-bottom: 12px; }
 .field:last-child { margin-bottom: 0; }
 .field label { display: block; font-size: 12px; color: #444; margin-bottom: 4px; font-family: Arial, sans-serif; }
@@ -60,14 +55,12 @@ h1 { font-size: 20px; font-weight: normal; color: #1a1e2e; }
 .field input:focus, .field select:focus { outline: none; border-color: #2c5282; box-shadow: 0 0 0 2px rgba(44,82,130,0.12); }
 .field-note { font-size: 11px; color: #888; margin-top: 4px; font-family: Arial, sans-serif; }
 
-/* Mat chips */
 .mat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .mat-chip { background: #f4f5f7; border: 1px solid #e0e2e8; border-radius: 4px; padding: 8px 10px; }
 .mat-chip-lbl { font-size: 11px; font-family: Arial, sans-serif; color: #666; }
 .mat-chip-val { font-size: 15px; font-family: monospace; color: #1a1e2e; margin-top: 2px; }
 .mat-chip-unit { font-size: 11px; color: #888; }
 
-/* Section props table */
 .sec-props { background: #f8f9fb; border: 1px solid #e0e2e8; border-radius: 4px; padding: 10px 12px; margin-top: 10px; }
 .sec-props-title { font-size: 11px; font-family: Arial,sans-serif; color: #555; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
 .sec-props table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: Arial, sans-serif; }
@@ -75,11 +68,9 @@ h1 { font-size: 20px; font-weight: normal; color: #1a1e2e; }
 .sec-props td:last-child { text-align: right; font-family: monospace; color: #1a1e2e; }
 .sec-props td.hl { color: #2c5282; font-weight: bold; }
 
-/* Diagram panel */
 .diagram-panel { background: #fff; border: 1px solid #d0d4dc; border-radius: 6px; padding: 18px; margin-bottom: 16px; }
 .diagram-caption { font-size: 11px; font-family: Arial,sans-serif; color: #999; text-align: center; margin-top: 8px; }
 
-/* Results */
 .results-panel { background: #fff; border: 1px solid #d0d4dc; border-radius: 6px; padding: 18px; }
 .section-label {
   font-size: 11px; font-family: Arial, sans-serif; font-weight: bold;
@@ -90,20 +81,31 @@ h1 { font-size: 20px; font-weight: normal; color: #1a1e2e; }
 
 .result-row { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
 .result-row.hl { background: #ebf4ff; margin: 0 -18px; padding: 8px 18px; border-bottom: 1px solid #c9dff5; }
+.result-row.ok-row  { background: #f0fff4; margin: 0 -18px; padding: 8px 18px; border-bottom: 1px solid #9ae6b4; }
+.result-row.err-row { background: #fff5f5; margin: 0 -18px; padding: 8px 18px; border-bottom: 1px solid #feb2b2; }
 .result-row:last-child { border-bottom: none; }
 .result-name { font-size: 13px; color: #333; font-family: Arial, sans-serif; }
 .result-sub  { font-size: 11px; color: #999; font-family: Arial, sans-serif; margin-top: 1px; }
 .result-val  { font-family: monospace; font-size: 14px; color: #1a1e2e; white-space: nowrap; min-width: 90px; text-align: right; }
-.result-val.hl { font-size: 16px; font-weight: bold; color: #2c5282; }
+.result-val.hl  { font-size: 16px; font-weight: bold; color: #2c5282; }
+.result-val.ok  { font-size: 15px; font-weight: bold; color: #276749; }
+.result-val.err { font-size: 15px; font-weight: bold; color: #c53030; }
 .result-unit { font-size: 11px; color: #888; margin-left: 3px; }
 
 .error-box { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 4px; padding: 12px; color: #c53030; font-size: 13px; font-family: Arial, sans-serif; line-height: 1.5; white-space: pre-line; }
+.warn-box  { background: #fffaf0; border: 1px solid #f6ad55; border-radius: 4px; padding: 10px 12px; color: #7b341e; font-size: 12px; font-family: Arial, sans-serif; line-height: 1.5; margin-bottom: 12px; }
 .ec2-note { font-size: 11px; color: #888; font-family: Arial, sans-serif; line-height: 1.6; margin-top: 14px; padding-top: 10px; border-top: 1px solid #eee; }
 
 .badge { display: inline-block; font-size: 11px; font-family: monospace; padding: 2px 8px; border-radius: 3px; border: 1px solid #bbb; background: #f8f8f8; color: #333; }
 .badge.ok   { background: #f0fff4; border-color: #9ae6b4; color: #276749; }
 .badge.warn { background: #fffaf0; border-color: #f6ad55; color: #7b341e; }
 .badge.err  { background: #fff5f5; border-color: #feb2b2; color: #c53030; }
+
+.sigma-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.sigma-toggle { display: flex; border: 1px solid #bbbec6; border-radius: 4px; overflow: hidden; }
+.sigma-toggle button { padding: 5px 12px; border: none; background: #fff; cursor: pointer; font-size: 12px; font-family: Arial,sans-serif; color: #555; border-right: 1px solid #bbbec6; }
+.sigma-toggle button:last-child { border-right: none; }
+.sigma-toggle button.active { background: #1a1e2e; color: #fff; }
 
 .page-footer { margin-top: 28px; font-size: 11px; color: #aaa; font-family: Arial, sans-serif; text-align: center; }
 </style>
@@ -163,14 +165,11 @@ function solvePureBending(MEd_kNm, b_m, d_m, fck, fyk) {
 }
 
 /* ── Solver: bending + axial ────────────────────────────────────────────── */
-/* dp_m = a = d  (distância da fibra mais comprimida ao c.g. da armadura de tracção)
-   d' = h - a  (distância da fibra comprimida ao c.g. da armadura de compressão)
-   dph = d'/h = (h - a)/h                                                         */
 function solveBendingAxial(MEd_kNm, NEd_kN, b_m, h_m, dp_m, fck, fyk) {
   const { lambda, eta } = getLambdaEta(fck);
   const fcd = fck / 1.5, fyd = Math.min(fyk / 1.15, 600);
   const Es = 200000, ecu3 = getEcu3(fck);
-  const b = b_m * 1000, h = h_m * 1000, dph = (h_m - dp_m) / h_m;  // d'/h = (h-a)/h
+  const b = b_m * 1000, h = h_m * 1000, dph = (h_m - dp_m) / h_m;
   const mu = (MEd_kNm * 1e6) / (b * h * h * fcd);
   const nu = (NEd_kN  * 1e3) / (b * h * fcd);
   const strains = xi => ({
@@ -209,20 +208,242 @@ function solveBendingAxial(MEd_kNm, NEd_kN, b_m, h_m, dp_m, fck, fyk) {
   };
 }
 
-/* ── Section diagram ────────────────────────────────────────────────────── */
+/* ── Punching shear solver (45° cone — critical section at d from column) ─ */
+function solvePunching(bx, by, Bx, By, hF, cov, phiMM, rhoL_pct, VEd_kN, sigmaMode, sigmaManual, fck) {
+  if (bx <= 0 || by <= 0 || Bx <= 0 || By <= 0 || hF <= 0) return { error: "Geometria inválida." };
+  if (bx >= Bx || by >= By) return { error: "Pilar deve ser menor que a sapata (bx < Bx, by < By)." };
+  const phi_m = phiMM / 1000;
+  const d = hF - cov - phi_m / 2;
+  if (d <= 0.01) return { error: "Altura útil d ≤ 0.01 m.\nVerifique h, recobrimento e diâmetro da armadura." };
+  const d_mm = d * 1000;
+
+  /* 45° approach: critical section at d from column face (rectangular perimeter) */
+  const u_crit = 2 * (bx + by) + 8 * d;          // m
+  const A_crit = (bx + 2 * d) * (by + 2 * d);    // m²
+  const A_foot = Bx * By;                          // m²
+
+  /* Soil pressure */
+  const sigma = sigmaMode === "auto" ? VEd_kN / A_foot : +sigmaManual;
+
+  /* Net punching force */
+  const VEd_red = Math.max(0, VEd_kN - sigma * A_crit);  // kN
+
+  /* Punching shear stress (β = 1.0, concentric load) */
+  const vEd = VEd_red / (u_crit * d) * 0.001;  // MPa
+
+  /* EC2 resistance (EN 1992-1-1 §6.4.4) */
+  const rhoL = Math.min(rhoL_pct / 100, 0.02);
+  const k    = Math.min(1 + Math.sqrt(200 / d_mm), 2.0);
+  const CRdc = 0.12;
+  const vRdc_calc = CRdc * k * Math.pow(100 * rhoL * fck, 1/3);
+  const vmin      = 0.035 * Math.pow(k, 1.5) * Math.sqrt(fck);
+  const vRdc      = Math.max(vRdc_calc, vmin);
+
+  /* Check at column face */
+  const u_col    = 2 * (bx + by);
+  const vEd_col  = VEd_kN / (u_col * d) * 0.001;  // MPa
+  const nu_v     = 0.6 * (1 - fck / 250);
+  const fcd      = fck / 1.5;
+  const vRd_max  = 0.5 * nu_v * fcd;  // MPa
+
+  /* Overhang */
+  const ovX = (Bx - bx) / 2;
+  const ovY = (By - by) / 2;
+
+  return {
+    d, d_mm, k,
+    u_crit, A_crit, A_foot, sigma, VEd_red, vEd,
+    rhoL, CRdc, vRdc_calc, vmin, vRdc,
+    u_col, vEd_col, nu_v, fcd, vRd_max,
+    ovX, ovY,
+    critExceedsX: d > ovX,
+    critExceedsY: d > ovY,
+    ok:     vEd     <= vRdc,
+    ok_col: vEd_col <= vRd_max,
+    UCR:     +(vEd     / vRdc    ).toFixed(3),
+    UCR_col: +(vEd_col / vRd_max ).toFixed(3),
+  };
+}
+
+/* ── Footing diagram (plan + elevation) ─────────────────────────────────── */
+function FootingDiagram({ bxCol, byCol, Bx, By, hFoot, result }) {
+  const bxC = Math.max(+bxCol || 0.40, 0.05);
+  const byC = Math.max(+byCol || 0.40, 0.05);
+  const BxF = Math.max(+Bx    || 1.50, bxC + 0.01);
+  const ByF = Math.max(+By    || 1.50, byC + 0.01);
+  const hFV = Math.max(+hFoot || 0.40, 0.05);
+  const dV  = (result && !result.error) ? result.d : Math.max(hFV - 0.08, 0.05);
+
+  const W = 300, HP = 252, GAP = 18, HE = 178, HTOT = HP + GAP + HE;
+
+  /* ---- Plan view ---- */
+  const PAD = 44;
+  const sc  = Math.min((W - 2*PAD) / BxF, (HP - 2*PAD) / ByF);
+  const fW  = BxF * sc, fH = ByF * sc;
+  const foxP = (W - fW) / 2, foyP = (HP - fH) / 2;
+
+  const cW = bxC * sc, cH = byC * sc;
+  const cxP = foxP + (fW - cW) / 2;
+  const cyP = foyP + (fH - cH) / 2;
+  const dS  = dV * sc;
+
+  /* ---- Elevation view ---- */
+  const EY0   = HP + GAP;
+  const PAD_EX = 44, PAD_EY = 12;
+  const STUB  = 32;
+  const scE   = Math.min((W - 2*PAD_EX) / BxF, (HE - 2*PAD_EY - STUB - 22) / hFV);
+  const efW   = BxF * scE, efH = hFV * scE;
+  const eox   = (W - efW) / 2;
+  const eoy   = EY0 + PAD_EY + STUB;
+  const ecW   = bxC * scE;
+  const ecX   = eox + (efW - ecW) / 2;
+  const dSE   = dV * scE;
+
+  /* 45° cone endpoints */
+  const coneL  = Math.max(ecX - dSE, eox);
+  const coneR  = Math.min(ecX + ecW + dSE, eox + efW);
+  const coneY  = eoy + dSE;
+
+  const T  = { fontSize: 10, fontFamily: "Arial, sans-serif", fill: "#333" };
+  const TB = { fontSize: 10, fontFamily: "Arial, sans-serif", fill: "#2c5282" };
+  const TR = { fontSize: 10, fontFamily: "Arial, sans-serif", fill: "#c0392b" };
+  const TG = { fontSize: 9,  fontFamily: "Arial, sans-serif", fill: "#888" };
+
+  return (
+    <svg width={W} height={HTOT} style={{ display:"block", margin:"0 auto" }}>
+      <defs>
+        <pattern id="hatch45" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="8" stroke="#777" strokeWidth="1" opacity="0.55"/>
+        </pattern>
+        <clipPath id="footPlanClip">
+          <rect x={foxP} y={foyP} width={fW} height={fH}/>
+        </clipPath>
+        <clipPath id="footElevClip">
+          <rect x={eox} y={eoy} width={efW} height={efH}/>
+        </clipPath>
+      </defs>
+
+      {/* ======== PLAN VIEW ======== */}
+      <text x={W/2} y={9} textAnchor="middle" style={{...TG, letterSpacing:"0.12em"}}>VISTA SUPERIOR</text>
+
+      {/* Footing */}
+      <rect x={foxP} y={foyP} width={fW} height={fH} fill="#eceef2" stroke="#1a1e2e" strokeWidth={1.5}/>
+
+      {/* Area inside critical perimeter (lighter) */}
+      <g clipPath="url(#footPlanClip)">
+        <rect x={cxP - dS} y={cyP - dS} width={cW + 2*dS} height={cH + 2*dS}
+          fill="rgba(255,255,255,0.72)" stroke="none"/>
+        {/* Critical perimeter line */}
+        <rect x={cxP - dS} y={cyP - dS} width={cW + 2*dS} height={cH + 2*dS}
+          fill="none" stroke="#c0392b" strokeWidth={1.5} strokeDasharray="5,3"/>
+      </g>
+
+      {/* Column (hatched) */}
+      <rect x={cxP} y={cyP} width={cW} height={cH} fill="url(#hatch45)" stroke="#1a1e2e" strokeWidth={1.5}/>
+
+      {/* Dim: Bx (top) */}
+      <line x1={foxP} y1={foyP-16} x2={foxP+fW} y2={foyP-16} stroke="#555" strokeWidth={0.8}/>
+      <line x1={foxP} y1={foyP-22} x2={foxP} y2={foyP-10} stroke="#555" strokeWidth={0.8}/>
+      <line x1={foxP+fW} y1={foyP-22} x2={foxP+fW} y2={foyP-10} stroke="#555" strokeWidth={0.8}/>
+      <polygon points={`${foxP+5},${foyP-16} ${foxP+10},${foyP-19} ${foxP+10},${foyP-13}`} fill="#555"/>
+      <polygon points={`${foxP+fW-5},${foyP-16} ${foxP+fW-10},${foyP-19} ${foxP+fW-10},${foyP-13}`} fill="#555"/>
+      <text x={foxP+fW/2} y={foyP-22} textAnchor="middle" style={T}>B_x = {BxF.toFixed(2)} m</text>
+
+      {/* Dim: By (left) */}
+      <line x1={foxP-16} y1={foyP} x2={foxP-16} y2={foyP+fH} stroke="#555" strokeWidth={0.8}/>
+      <line x1={foxP-22} y1={foyP} x2={foxP-10} y2={foyP} stroke="#555" strokeWidth={0.8}/>
+      <line x1={foxP-22} y1={foyP+fH} x2={foxP-10} y2={foyP+fH} stroke="#555" strokeWidth={0.8}/>
+      <polygon points={`${foxP-16},${foyP+5} ${foxP-19},${foyP+10} ${foxP-13},${foyP+10}`} fill="#555"/>
+      <polygon points={`${foxP-16},${foyP+fH-5} ${foxP-19},${foyP+fH-10} ${foxP-13},${foyP+fH-10}`} fill="#555"/>
+      <text x={foxP-28} y={foyP+fH/2} textAnchor="middle"
+        transform={`rotate(-90,${foxP-28},${foyP+fH/2})`} style={T}>
+        B_y = {ByF.toFixed(2)} m
+      </text>
+
+      {/* d annotation (column face → critical perimeter) */}
+      <line x1={cxP+cW} y1={cyP+cH/2} x2={cxP+cW+dS} y2={cyP+cH/2}
+        stroke="#c0392b" strokeWidth={1} strokeDasharray="3,2" opacity={0.9}/>
+      <line x1={cxP+cW} y1={cyP+cH/2-4} x2={cxP+cW} y2={cyP+cH/2+4} stroke="#c0392b" strokeWidth={1}/>
+      <line x1={cxP+cW+dS} y1={cyP+cH/2-4} x2={cxP+cW+dS} y2={cyP+cH/2+4} stroke="#c0392b" strokeWidth={1}/>
+      <text x={cxP+cW+dS/2} y={cyP+cH/2-6} textAnchor="middle" style={{...TR, fontStyle:"italic"}}>d</text>
+
+      {/* Separator */}
+      <line x1={24} y1={HP+GAP/2} x2={W-24} y2={HP+GAP/2} stroke="#e0e2e8" strokeWidth={1}/>
+      <text x={W/2} y={HP+GAP/2+4} textAnchor="middle" style={{...TG, letterSpacing:"0.10em"}}>CORTE</text>
+
+      {/* ======== ELEVATION VIEW ======== */}
+
+      {/* Column stub */}
+      <rect x={ecX} y={eoy-STUB} width={ecW} height={STUB}
+        fill="url(#hatch45)" stroke="#1a1e2e" strokeWidth={1.5}/>
+
+      {/* Footing cross-section */}
+      <rect x={eox} y={eoy} width={efW} height={efH} fill="#eceef2" stroke="#1a1e2e" strokeWidth={1.5}/>
+
+      {/* 45° failure cone (clipped to footing) */}
+      <g clipPath="url(#footElevClip)">
+        <line x1={ecX}      y1={eoy} x2={coneL} y2={coneY}
+          stroke="#c0392b" strokeWidth={1.5} strokeDasharray="6,3"/>
+        <line x1={ecX+ecW}  y1={eoy} x2={coneR} y2={coneY}
+          stroke="#c0392b" strokeWidth={1.5} strokeDasharray="6,3"/>
+        {/* Shaded failure zone */}
+        <polygon
+          points={`${ecX},${eoy} ${coneL},${coneY} ${coneR},${coneY} ${ecX+ecW},${eoy}`}
+          fill="rgba(192,57,43,0.08)" stroke="none"/>
+        {/* d level dashed line */}
+        <line x1={eox-2} y1={eoy+dSE} x2={eox+efW+2} y2={eoy+dSE}
+          stroke="#2c5282" strokeWidth={1} strokeDasharray="4,3"/>
+      </g>
+
+      {/* d annotation (right side) */}
+      <line x1={eox+efW+16} y1={eoy} x2={eox+efW+16} y2={eoy+dSE} stroke="#2c5282" strokeWidth={0.9}/>
+      <line x1={eox+efW+10} y1={eoy}    x2={eox+efW+22} y2={eoy}    stroke="#2c5282" strokeWidth={0.9}/>
+      <line x1={eox+efW+10} y1={eoy+dSE} x2={eox+efW+22} y2={eoy+dSE} stroke="#2c5282" strokeWidth={0.9}/>
+      <polygon points={`${eox+efW+16},${eoy+5} ${eox+efW+13},${eoy+11} ${eox+efW+19},${eoy+11}`} fill="#2c5282"/>
+      <polygon points={`${eox+efW+16},${eoy+dSE-5} ${eox+efW+13},${eoy+dSE-11} ${eox+efW+19},${eoy+dSE-11}`} fill="#2c5282"/>
+      <text x={eox+efW+30} y={eoy+dSE/2+4} style={{...TB, fontStyle:"italic"}}>d</text>
+
+      {/* h annotation (left side) */}
+      <line x1={eox-16} y1={eoy} x2={eox-16} y2={eoy+efH} stroke="#555" strokeWidth={0.9}/>
+      <line x1={eox-22} y1={eoy}    x2={eox-10} y2={eoy}    stroke="#555" strokeWidth={0.9}/>
+      <line x1={eox-22} y1={eoy+efH} x2={eox-10} y2={eoy+efH} stroke="#555" strokeWidth={0.9}/>
+      <polygon points={`${eox-16},${eoy+5} ${eox-19},${eoy+11} ${eox-13},${eoy+11}`} fill="#555"/>
+      <polygon points={`${eox-16},${eoy+efH-5} ${eox-19},${eoy+efH-11} ${eox-13},${eoy+efH-11}`} fill="#555"/>
+      <text x={eox-30} y={eoy+efH/2+4} textAnchor="middle"
+        transform={`rotate(-90,${eox-30},${eoy+efH/2})`} style={{...T, fontStyle:"italic"}}>
+        h = {(hFV*100).toFixed(0)} cm
+      </text>
+
+      {/* σEd arrows (soil reaction upward) */}
+      {[0.1,0.3,0.5,0.7,0.9].map((f,i) => {
+        const ax = eox + efW * f;
+        const ay1 = eoy + efH + 18, ay2 = eoy + efH + 2;
+        return (
+          <g key={i}>
+            <line x1={ax} y1={ay1} x2={ax} y2={ay2} stroke="#888" strokeWidth={1}/>
+            <polygon points={`${ax},${ay2} ${ax-3},${ay2+6} ${ax+3},${ay2+6}`} fill="#888"/>
+          </g>
+        );
+      })}
+      <text x={W/2} y={eoy+efH+30} textAnchor="middle" style={{...TG, fontStyle:"italic"}}>σ_Ed</text>
+
+      {/* "45°" angle label on cone */}
+      {dSE > 20 && (
+        <text x={ecX - dSE*0.55} y={eoy + dSE*0.42} style={{...TR, fontSize:9}}>45°</text>
+      )}
+    </svg>
+  );
+}
+
+/* ── Section diagram (existing bending modes) ───────────────────────────── */
 function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
   const W = 300, H = 310;
-  /* Drawing area for the section */
   const LEFT = 68, RIGHT = 52, TOP = 18, BOT = 50;
   const aw = W - LEFT - RIGHT, ah = H - TOP - BOT;
 
   const bv  = Math.max(+b_m  || 0.001, 0.001);
-  // Always use h for the section outline height
   const hv  = Math.max(+h_m  || 0.001, 0.001);
-  // For simple bending: dv = d (input directly)
-  // For composed:       dv = a = d (input directly — a is the effective depth)
   const dv  = mode === "simple" ? (+d_m || 0.45) : (+dp_m || 0.45);
-  // dpv = a (effective depth) for composed; d' = h - a
   const dpv = +dp_m || 0.45;
 
   const sc = Math.min(aw / bv, ah / hv);
@@ -230,35 +451,24 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
   const ox = LEFT + (aw - sW) / 2;
   const oy = TOP  + (ah - sH) / 2;
 
-  /* Neutral axis — position relative to top of section */
   const xNA = result && !result.error ? Math.min(result.xNA_m || 0, hv) : null;
   const xNA_y = xNA !== null ? oy + xNA * sc : null;
 
-  /* Steel positions in SVG y:
-     - tension steel at d from top (= dv)
-     - compression steel at d' = h - a from top (composed mode) */
   const yTens = oy + dv * sc;
   const yComp = mode === "composed" ? oy + (hv - dpv) * sc : null;
-
-  /* Cover zone at bottom for simple bending (h - d) */
   const coverH = mode === "simple" ? (hv - dv) * sc : 0;
-
-  /* Compression zone — spans from top face down to neutral axis (x) */
   const lam = (result && result.lambda) || 0.8;
   const blockH = xNA !== null ? Math.min(xNA, hv) * sc : 0;
 
-  /* Text styles */
   const T  = { fontSize: 11, fontFamily: "Arial, sans-serif", fill: "#333" };
   const TB = { fontSize: 11, fontFamily: "Arial, sans-serif", fill: "#2c5282" };
   const TR = { fontSize: 10, fontFamily: "Arial, sans-serif", fill: "#c0392b" };
   const TG = { fontSize: 10, fontFamily: "Arial, sans-serif", fill: "#888" };
 
-  /* Arrow helper */
   const Arrow = ({ x1, y1, x2, y2, col="#555" }) => {
     const dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx+dy*dy);
     if (len < 2) return null;
-    const ux = dx/len, uy = dy/len;
-    const as = 5;
+    const ux = dx/len, uy = dy/len, as = 5;
     return (
       <g>
         <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={col} strokeWidth={1}/>
@@ -270,67 +480,37 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
 
   return (
     <svg width={W} height={H} style={{ display: "block", margin: "0 auto" }}>
-
-      {/* Cover zone fill (h - d) for simple bending */}
       {mode === "simple" && coverH > 1 && (
-        <rect x={ox} y={oy + sH - coverH} width={sW} height={coverH}
-          fill="rgba(200,200,200,0.18)" stroke="none"/>
+        <rect x={ox} y={oy + sH - coverH} width={sW} height={coverH} fill="rgba(200,200,200,0.18)" stroke="none"/>
       )}
-
-      {/* Compression zone fill — full zone from top to neutral axis (x) */}
       {blockH > 1 && (
-        <rect x={ox} y={oy} width={sW} height={blockH}
-          fill="rgba(44,82,130,0.15)" stroke="none"/>
+        <rect x={ox} y={oy} width={sW} height={blockH} fill="rgba(44,82,130,0.15)" stroke="none"/>
       )}
-
-      {/* Section outline */}
-      <rect x={ox} y={oy} width={sW} height={sH}
-        fill="none" stroke="#1a1e2e" strokeWidth={1.8}/>
-
-      {/* Light hatching */}
+      <rect x={ox} y={oy} width={sW} height={sH} fill="none" stroke="#1a1e2e" strokeWidth={1.8}/>
       {[0.2, 0.4, 0.6, 0.8].map((f, i) => (
-        <line key={i} x1={ox} y1={oy + f*sH} x2={ox+10} y2={oy + f*sH}
-          stroke="#ccc" strokeWidth={0.8}/>
+        <line key={i} x1={ox} y1={oy + f*sH} x2={ox+10} y2={oy + f*sH} stroke="#ccc" strokeWidth={0.8}/>
       ))}
-
-      {/* Dashed line at d level for simple bending (separates d from cover) */}
       {mode === "simple" && coverH > 4 && (
-        <line x1={ox} y1={yTens} x2={ox+sW} y2={yTens}
-          stroke="#aaa" strokeWidth={0.8} strokeDasharray="4,3"/>
+        <line x1={ox} y1={yTens} x2={ox+sW} y2={yTens} stroke="#aaa" strokeWidth={0.8} strokeDasharray="4,3"/>
       )}
-
-      {/* Neutral axis */}
       {xNA_y !== null && xNA_y > oy+2 && xNA_y < oy+sH-2 && (
         <>
-          <line x1={ox-10} y1={xNA_y} x2={ox+sW+10} y2={xNA_y}
-            stroke="#c0392b" strokeWidth={1.2} strokeDasharray="6,3"/>
+          <line x1={ox-10} y1={xNA_y} x2={ox+sW+10} y2={xNA_y} stroke="#c0392b" strokeWidth={1.2} strokeDasharray="6,3"/>
           <text x={ox-12} y={xNA_y-3} textAnchor="end" style={TR}>x</text>
         </>
       )}
-
-      {/* Tension steel bars */}
       {[0.22, 0.5, 0.78].map((f, i) => (
-        <circle key={i} cx={ox + f*sW} cy={yTens} r={5.5}
-          fill="#1a1e2e" stroke="#f4f5f7" strokeWidth={1}/>
+        <circle key={i} cx={ox + f*sW} cy={yTens} r={5.5} fill="#1a1e2e" stroke="#f4f5f7" strokeWidth={1}/>
       ))}
-
-      {/* Compression steel bars (composed) */}
       {mode === "composed" && yComp !== null && [0.22, 0.5, 0.78].map((f, i) => (
-        <circle key={i} cx={ox + f*sW} cy={yComp} r={5.5}
-          fill="#fff" stroke="#1a1e2e" strokeWidth={1.5}/>
+        <circle key={i} cx={ox + f*sW} cy={yComp} r={5.5} fill="#fff" stroke="#1a1e2e" strokeWidth={1.5}/>
       ))}
-
-      {/* ── Annotations ── */}
-
-      {/* b — bottom double-headed arrow */}
       <Arrow x1={ox} y1={oy+sH+18} x2={ox+sW} y2={oy+sH+18}/>
       <line x1={ox}    y1={oy+sH+5} x2={ox}    y2={oy+sH+22} stroke="#555" strokeWidth={1}/>
       <line x1={ox+sW} y1={oy+sH+5} x2={ox+sW} y2={oy+sH+22} stroke="#555" strokeWidth={1}/>
       <text x={ox+sW/2} y={oy+sH+34} textAnchor="middle" style={{...TB, fontStyle:"italic"}}>
         b = {(bv*100).toFixed(0)} cm
       </text>
-
-      {/* h — right arrow (total height, always) */}
       <Arrow x1={ox+sW+18} y1={oy} x2={ox+sW+18} y2={oy+sH}/>
       <line x1={ox+sW+10} y1={oy}    x2={ox+sW+26} y2={oy}    stroke="#555" strokeWidth={1}/>
       <line x1={ox+sW+10} y1={oy+sH} x2={ox+sW+26} y2={oy+sH} stroke="#555" strokeWidth={1}/>
@@ -338,8 +518,6 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
         transform={`rotate(-90,${ox+sW+36},${oy+sH/2})`}>
         h = {(hv*100).toFixed(0)} cm
       </text>
-
-      {/* d — left arrow from top to tension steel centroid (blue) */}
       <Arrow x1={ox-20} y1={oy} x2={ox-20} y2={yTens} col="#2c5282"/>
       <line x1={ox-28} y1={oy}    x2={ox-12} y2={oy}    stroke="#2c5282" strokeWidth={1}/>
       <line x1={ox-28} y1={yTens} x2={ox-12} y2={yTens} stroke="#2c5282" strokeWidth={1}/>
@@ -347,8 +525,6 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
         transform={`rotate(-90,${ox-32},${oy+(yTens-oy)/2})`}>
         {mode==="composed" ? "a" : "d"} = {(dv*100).toFixed(0)} cm
       </text>
-
-      {/* h-d cover annotation for simple bending */}
       {mode === "simple" && coverH > 12 && (
         <>
           <Arrow x1={ox-20} y1={yTens} x2={ox-20} y2={oy+sH} col="#aaa"/>
@@ -359,8 +535,6 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
           </text>
         </>
       )}
-
-      {/* d' bracket (composed) — compression steel at h-a from top */}
       {mode==="composed" && yComp !== null && (
         <>
           <line x1={ox-8} y1={oy}     x2={ox-8} y2={yComp} stroke="#aaa" strokeWidth={1} strokeDasharray="3,2"/>
@@ -373,18 +547,12 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
           <text x={ox+sW+8} y={yComp+4} style={{...TG, fontStyle:"italic"}}>A_s′</text>
         </>
       )}
-
-      {/* Steel labels */}
       <text x={ox+sW+8} y={yTens+4} style={{...T, fontStyle:"italic"}}>A_s</text>
-
-      {/* x label on right of section */}
       {xNA_y !== null && xNA_y > oy+8 && xNA_y < oy+sH-8 && (
         <text x={ox+sW+8} y={xNA_y-3} style={{...TR, fontStyle:"italic"}}>
           x={((xNA_y-oy)/sc*100).toFixed(0)}cm
         </text>
       )}
-
-      {/* "zona comp." label inside compression zone */}
       {blockH > 22 && (
         <text x={ox+sW/2} y={oy+blockH/2+4} textAnchor="middle"
           style={{fontSize:9, fontFamily:"Arial,sans-serif", fill:"#2c5282"}}>zona comp.</text>
@@ -424,14 +592,16 @@ function Sel({ label, value, onChange, options }) {
     </Field>
   );
 }
-function Row({ name, sub, value, unit, hl }) {
+function Row({ name, sub, value, unit, hl, ok, err }) {
+  const cls = "result-row" + (hl?" hl":"") + (ok?" ok-row":"") + (err?" err-row":"");
+  const valCls = "result-val" + (hl?" hl":"") + (ok?" ok":"") + (err?" err":"");
   return (
-    <div className={"result-row"+(hl?" hl":"")}>
+    <div className={cls}>
       <div>
         <div className="result-name">{name}</div>
         {sub && <div className="result-sub">{sub}</div>}
       </div>
-      <div className={"result-val"+(hl?" hl":"")}>
+      <div className={valCls}>
         {value}{unit && <span className="result-unit">{unit}</span>}
       </div>
     </div>
@@ -445,40 +615,58 @@ function Badge({ domain }) {
 /* ── App ────────────────────────────────────────────────────────────────── */
 function App() {
   const [mode, setMode] = useState("simple");
-  const [fckI, setFckI] = useState(4);   // C30/37
-  const [fykI, setFykI] = useState(1);   // A500
+
+  /* Bending state */
+  const [fckI, setFckI] = useState(4);
+  const [fykI, setFykI] = useState(1);
   const [b,  setB]  = useState("0.30");
   const [d,  setD]  = useState("0.45");
   const [h,  setH]  = useState("0.50");
-  const [dp, setDp] = useState("0.45");  // a = d (altura útil, não recobrimento)
+  const [dp, setDp] = useState("0.45");
   const [MEd, setMEd] = useState("150");
   const [NEd, setNEd] = useState("0");
+
+  /* Punching state */
+  const [bxCol,   setBxCol]   = useState("0.50");
+  const [byCol,   setByCol]   = useState("0.50");
+  const [BxFoot,  setBxFoot]  = useState("1.50");
+  const [ByFoot,  setByFoot]  = useState("1.50");
+  const [hFoot,   setHFoot]   = useState("0.40");
+  const [covFoot, setCovFoot] = useState("0.05");
+  const [phiFoot, setPhiFoot] = useState("20");
+  const [rhoFoot, setRhoFoot] = useState("0.30");
+  const [VEdFoot, setVEdFoot] = useState("600");
+  const [sigmaMode, setSigmaMode] = useState("auto");
+  const [sigmaMan,  setSigmaMan]  = useState("200");
 
   const fck = CONCRETE[+fckI].fck, fyk = STEEL[+fykI].fyk;
   const fcd = +(fck/1.5).toFixed(2), fyd = +(Math.min(fyk/1.15,600)).toFixed(2);
 
-  const result = useCallback(() => {
-    if (mode === "simple") return solvePureBending(+MEd, +b, +d, fck, fyk);
-    return solveBendingAxial(+MEd, +NEd, +b, +h, +dp, fck, fyk);
+  /* Bending result */
+  const bendResult = useCallback(() => {
+    if (mode === "simple")   return solvePureBending(+MEd, +b, +d, fck, fyk);
+    if (mode === "composed") return solveBendingAxial(+MEd, +NEd, +b, +h, +dp, fck, fyk);
+    return null;
   }, [mode,MEd,NEd,b,d,h,dp,fck,fyk])();
 
-  /* Derived section properties */
-  const bv = +b||0, hv = +h||0, dv = +d||0, dpv = +dp||0;
-  const h_eff  = hv;  // always use total height h for gross section properties
-  // d_eff: for simple = d; for composed = a (input dp is a = d directly)
-  const d_eff  = mode==="simple" ? dv : dpv;
-  const Ac_cm2 = (bv*100 * h_eff*100).toFixed(0);
-  const I_cm4  = ((bv*100) * Math.pow(h_eff*100, 3) / 12).toFixed(0);
-  const W_cm3  = ((bv*100) * Math.pow(h_eff*100, 2) / 6).toFixed(0);
-
-  const rho_pct = result && !result.error
-    ? (mode==="simple"
-        ? result.As_cm2 / (bv*100 * d_eff*100) * 100
-        : result.As_each_cm2 / (bv*100 * d_eff*100) * 100
-      ).toFixed(3)
+  /* Punching result */
+  const punchResult = mode === "punching"
+    ? solvePunching(+bxCol,+byCol,+BxFoot,+ByFoot,+hFoot,+covFoot,+phiFoot,+rhoFoot,+VEdFoot,sigmaMode,sigmaMan,fck)
     : null;
 
-  const ecu3_str = result.ecu3 ? (result.ecu3*1000).toFixed(2)+"‰" : "3.50‰";
+  /* Bending section props */
+  const bv = +b||0, hv = +h||0, dv = +d||0, dpv = +dp||0;
+  const d_eff  = mode==="simple" ? dv : dpv;
+  const Ac_cm2 = (bv*100 * hv*100).toFixed(0);
+  const I_cm4  = ((bv*100) * Math.pow(hv*100, 3) / 12).toFixed(0);
+  const W_cm3  = ((bv*100) * Math.pow(hv*100, 2) / 6).toFixed(0);
+  const rho_pct = bendResult && !bendResult.error
+    ? (mode==="simple"
+        ? bendResult.As_cm2 / (bv*100 * d_eff*100) * 100
+        : bendResult.As_each_cm2 / (bv*100 * d_eff*100) * 100
+      ).toFixed(3)
+    : null;
+  const ecu3_str = bendResult && bendResult.ecu3 ? (bendResult.ecu3*1000).toFixed(2)+"‰" : "3.50‰";
 
   return (
     <div className="page">
@@ -501,54 +689,227 @@ function App() {
         <button className={"mode-btn"+(mode==="composed"?" active":"")} onClick={()=>setMode("composed")}>
           Flexão Composta &nbsp;(M + N)
         </button>
+        <button className={"mode-btn"+(mode==="punching"?" active":"")} onClick={()=>setMode("punching")}>
+          Punçoamento &nbsp;(Sapata)
+        </button>
       </div>
 
-      <div className="layout">
-        {/* ── Left column ── */}
-        <div>
-          {/* Materials */}
-          <div className="panel">
-            <div className="panel-title">Materiais</div>
-            <Sel label="Classe de betão" value={fckI} onChange={setFckI} options={CONCRETE}/>
-            <Sel label="Aço" value={fykI} onChange={setFykI} options={STEEL}/>
-            <div className="mat-row">
-              <div className="mat-chip">
-                <div className="mat-chip-lbl">f<sub>cd</sub> = f<sub>ck</sub> / γ<sub>c</sub></div>
-                <div className="mat-chip-val">{fcd} <span className="mat-chip-unit">MPa</span></div>
+      {/* ════════════ PUNCHING MODE ════════════ */}
+      {mode === "punching" && (
+        <div className="layout">
+          {/* Left: inputs */}
+          <div>
+            {/* Materials */}
+            <div className="panel">
+              <div className="panel-title">Materiais</div>
+              <Sel label="Classe de betão" value={fckI} onChange={setFckI} options={CONCRETE}/>
+              <div className="mat-row">
+                <div className="mat-chip">
+                  <div className="mat-chip-lbl">f<sub>cd</sub> = f<sub>ck</sub> / γ<sub>c</sub></div>
+                  <div className="mat-chip-val">{fcd} <span className="mat-chip-unit">MPa</span></div>
+                </div>
+                <div className="mat-chip">
+                  <div className="mat-chip-lbl">ν = 0.6(1 − f<sub>ck</sub>/250)</div>
+                  <div className="mat-chip-val">{(0.6*(1-fck/250)).toFixed(3)}</div>
+                </div>
               </div>
-              <div className="mat-chip">
-                <div className="mat-chip-lbl">f<sub>yd</sub> = f<sub>yk</sub> / γ<sub>s</sub></div>
-                <div className="mat-chip-val">{fyd} <span className="mat-chip-unit">MPa</span></div>
+            </div>
+
+            {/* Column geometry */}
+            <div className="panel">
+              <div className="panel-title">Geometria do pilar</div>
+              <Num label="Dimensão b_x (direcção x)" value={bxCol} onChange={setBxCol} unit="m" step="0.05"/>
+              <Num label="Dimensão b_y (direcção y)" value={byCol} onChange={setByCol} unit="m" step="0.05"/>
+            </div>
+
+            {/* Footing geometry */}
+            <div className="panel">
+              <div className="panel-title">Geometria da sapata</div>
+              <Num label="Comprimento B_x" value={BxFoot} onChange={setBxFoot} unit="m" step="0.05"/>
+              <Num label="Largura B_y"     value={ByFoot} onChange={setByFoot} unit="m" step="0.05"/>
+              <Num label="Altura total h"  value={hFoot}  onChange={setHFoot}  unit="m" step="0.05"/>
+              <Num label="Recobrimento c"  value={covFoot} onChange={setCovFoot} unit="m" step="0.005"
+                note="Até à face exterior das armaduras"/>
+              <Num label="Diâmetro das armaduras φ" value={phiFoot} onChange={setPhiFoot} unit="mm" step="2"/>
+              <Num label="Taxa de armadura ρ_l"     value={rhoFoot} onChange={setRhoFoot} unit="%" step="0.05"
+                note="Média das duas direcções (≤ 2%)"/>
+              {punchResult && !punchResult.error && (
+                <div className="sec-props" style={{marginTop:10}}>
+                  <div className="sec-props-title">Parâmetros de cálculo</div>
+                  <table><tbody>
+                    <tr><td>Altura útil  d = h − c − φ/2</td><td>{(punchResult.d*100).toFixed(1)} cm</td></tr>
+                    <tr><td>Factor k = 1 + √(200/d)</td><td>{punchResult.k.toFixed(3)}</td></tr>
+                    <tr><td>Overhang x: (B_x − b_x)/2</td><td>{(punchResult.ovX*100).toFixed(1)} cm</td></tr>
+                    <tr><td>Overhang y: (B_y − b_y)/2</td><td>{(punchResult.ovY*100).toFixed(1)} cm</td></tr>
+                  </tbody></table>
+                </div>
+              )}
+            </div>
+
+            {/* Load */}
+            <div className="panel">
+              <div className="panel-title">Acções</div>
+              <Num label="Força de cálculo V_Ed" value={VEdFoot} onChange={setVEdFoot} unit="kN" step="10"/>
+              <div className="field">
+                <label>Pressão do solo σ_Ed</label>
+                <div className="sigma-toggle" style={{marginBottom:8}}>
+                  <button className={sigmaMode==="auto"?"active":""} onClick={()=>setSigmaMode("auto")}>
+                    Auto (V / B_x·B_y)
+                  </button>
+                  <button className={sigmaMode==="manual"?"active":""} onClick={()=>setSigmaMode("manual")}>
+                    Manual
+                  </button>
+                </div>
+                {sigmaMode==="manual" && (
+                  <div style={{position:"relative"}}>
+                    <input type="number" value={sigmaMan} step="5"
+                      onChange={e=>setSigmaMan(e.target.value)}
+                      style={{width:"100%",paddingRight:52,border:"1px solid #bbbec6",borderRadius:4,padding:"7px 52px 7px 10px"}}/>
+                    <span style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",fontSize:12,color:"#888"}}>kN/m²</span>
+                  </div>
+                )}
+                {punchResult && !punchResult.error && (
+                  <div className="field-note">σ utilizada: {punchResult.sigma.toFixed(2)} kN/m²</div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Geometry */}
-          <div className="panel">
-            <div className="panel-title">Geometria da secção</div>
-            <Num label="Largura -  b" value={b} onChange={setB} unit="m" step="0.05"/>
-            {mode === "simple" ? (
-              <>
-                <Num label="Altura total - h" value={h} onChange={setH} unit="m" step="0.05"
-                  note="Altura total da secção"/>
-                <Num label="Altura útil  d"
-                  value={d} onChange={setD} unit="m" step="0.05"
-                  note="Distância da face comprimida ao centróide da armadura de tracção"/>
-              </>
-            ) : (
-              <>
-                <Num label="Altura total - h" value={h} onChange={setH} unit="m" step="0.05"/>
-                <Num label="a  —  Altura útil"
-                  value={dp} onChange={setDp} unit="m" step="0.005"
-                  note="Dist. da fibra mais comprimida ao c.g. da armadura de tracção  (d′ = h − a)"/>
-              </>
-            )}
+          {/* Right: diagram + results */}
+          <div>
+            <div className="diagram-panel">
+              <div className="panel-title">Diagrama da sapata</div>
+              <FootingDiagram
+                bxCol={bxCol} byCol={byCol} Bx={BxFoot} By={ByFoot}
+                hFoot={hFoot} result={punchResult}/>
+              <div className="diagram-caption">
+                Zona vermelha tracejada = perímetro crítico a d da face do pilar (cone 45°) &nbsp;·&nbsp; Zona cinzenta escura = pilar
+              </div>
+            </div>
 
-            {/* Section properties box */}
-            <div className="sec-props">
-              <div className="sec-props-title">Propriedades da secção</div>
-              <table>
-                <tbody>
+            <div className="results-panel">
+              <div className="panel-title">Verificação ao punçoamento — EN 1992-1-1 §6.4</div>
+
+              {punchResult && punchResult.error ? (
+                <div className="error-box">⚠  {punchResult.error}</div>
+              ) : punchResult ? (<>
+
+                {(punchResult.critExceedsX || punchResult.critExceedsY) && (
+                  <div className="warn-box">
+                    ⚠ O perímetro crítico a d excede o contorno da sapata
+                    {punchResult.critExceedsX ? ` (direcção x: d=${(punchResult.d*100).toFixed(1)} cm > overhang=${(punchResult.ovX*100).toFixed(1)} cm)` : ""}
+                    {punchResult.critExceedsY ? ` (direcção y: d=${(punchResult.d*100).toFixed(1)} cm > overhang=${(punchResult.ovY*100).toFixed(1)} cm)` : ""}.
+                    O perímetro crítico fica limitado à aresta da sapata.
+                  </div>
+                )}
+
+                <div className="section-label">Perímetro crítico (45° — secção a d da face)</div>
+                <Row name="u_crit = 2(b_x + b_y) + 8d"
+                  sub={`= 2(${(+bxCol).toFixed(2)} + ${(+byCol).toFixed(2)}) + 8×${punchResult.d.toFixed(3)}`}
+                  value={punchResult.u_crit.toFixed(3)} unit="m"/>
+                <Row name="A_crit = (b_x + 2d)(b_y + 2d)"
+                  sub={`= (${(+bxCol+2*punchResult.d).toFixed(3)}) × (${(+byCol+2*punchResult.d).toFixed(3)})`}
+                  value={punchResult.A_crit.toFixed(4)} unit="m²"/>
+                <Row name="A_sapata = B_x × B_y" value={punchResult.A_foot.toFixed(3)} unit="m²"/>
+
+                <div className="section-label">Força de punçoamento reduzida</div>
+                <Row name="σ_Ed — pressão do solo de cálculo" value={punchResult.sigma.toFixed(2)} unit="kN/m²"/>
+                <Row name="V_Ed,red = V_Ed − σ_Ed × A_crit"
+                  sub={`= ${(+VEdFoot).toFixed(1)} − ${punchResult.sigma.toFixed(2)} × ${punchResult.A_crit.toFixed(4)}`}
+                  value={punchResult.VEd_red.toFixed(2)} unit="kN"/>
+
+                <div className="section-label">Tensão de punçoamento actuante</div>
+                <Row name="v_Ed = V_Ed,red / (u_crit · d)"
+                  sub={`= ${punchResult.VEd_red.toFixed(2)} / (${punchResult.u_crit.toFixed(3)} × ${punchResult.d.toFixed(3)}) × 10⁻³`}
+                  value={punchResult.vEd.toFixed(4)} unit="MPa" hl/>
+
+                <div className="section-label">Resistência ao punçoamento (sem armadura)</div>
+                <Row name="k = 1 + √(200/d)  [d em mm]"
+                  sub={`= 1 + √(200/${punchResult.d_mm.toFixed(0)}) = ${punchResult.k.toFixed(3)} ≤ 2.0`}
+                  value={punchResult.k.toFixed(3)}/>
+                <Row name="v_Rd,c = C_Rd,c · k · (100·ρ_l·f_ck)^(1/3)"
+                  sub={`= 0.12 × ${punchResult.k.toFixed(3)} × (100×${(punchResult.rhoL*100).toFixed(3)}%×${fck})^(1/3)`}
+                  value={punchResult.vRdc_calc.toFixed(4)} unit="MPa"/>
+                <Row name="v_min = 0.035 · k^(3/2) · f_ck^(1/2)"
+                  value={punchResult.vmin.toFixed(4)} unit="MPa"/>
+                <Row name="v_Rd,c = max(v_Rd,c , v_min)"
+                  value={punchResult.vRdc.toFixed(4)} unit="MPa" hl/>
+
+                <div className="section-label">Verificação</div>
+                <Row
+                  name={punchResult.ok ? "✓  v_Ed ≤ v_Rd,c — VERIFICA" : "✗  v_Ed > v_Rd,c — NÃO VERIFICA"}
+                  sub={`UC = v_Ed / v_Rd,c = ${punchResult.UCR}`}
+                  value={`${(punchResult.UCR*100).toFixed(1)} %`}
+                  ok={punchResult.ok} err={!punchResult.ok}/>
+
+                <div className="section-label">Verificação na face do pilar (esmagamento)</div>
+                <Row name="u₀ = 2(b_x + b_y)  [perímetro do pilar]"
+                  value={punchResult.u_col.toFixed(3)} unit="m"/>
+                <Row name="v_Ed,max = V_Ed / (u₀ · d)"
+                  value={punchResult.vEd_col.toFixed(4)} unit="MPa"/>
+                <Row name="v_Rd,max = 0.5 · ν · f_cd"
+                  sub={`ν = 0.6(1−${fck}/250) = ${punchResult.nu_v.toFixed(3)};  v_Rd,max = 0.5×${punchResult.nu_v.toFixed(3)}×${punchResult.fcd.toFixed(2)}`}
+                  value={punchResult.vRd_max.toFixed(3)} unit="MPa"/>
+                <Row
+                  name={punchResult.ok_col ? "✓  v_Ed,max ≤ v_Rd,max — VERIFICA" : "✗  v_Ed,max > v_Rd,max — NÃO VERIFICA"}
+                  sub={`UC = ${punchResult.UCR_col}`}
+                  value={`${(punchResult.UCR_col*100).toFixed(1)} %`}
+                  ok={punchResult.ok_col} err={!punchResult.ok_col}/>
+
+                <div className="ec2-note">
+                  Método do cone a 45° — secção crítica a d da face do pilar · Carga centrada (β = 1.0) ·
+                  C<sub>Rd,c</sub> = 0.18/γ<sub>c</sub> = 0.12 · ρ<sub>l</sub> limitado a 2% ·
+                  Referência: EN 1992-1-1, §6.4
+                </div>
+              </>) : null}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ BENDING MODES ════════════ */}
+      {mode !== "punching" && (
+        <div className="layout">
+          {/* Left column */}
+          <div>
+            <div className="panel">
+              <div className="panel-title">Materiais</div>
+              <Sel label="Classe de betão" value={fckI} onChange={setFckI} options={CONCRETE}/>
+              <Sel label="Aço" value={fykI} onChange={setFykI} options={STEEL}/>
+              <div className="mat-row">
+                <div className="mat-chip">
+                  <div className="mat-chip-lbl">f<sub>cd</sub> = f<sub>ck</sub> / γ<sub>c</sub></div>
+                  <div className="mat-chip-val">{fcd} <span className="mat-chip-unit">MPa</span></div>
+                </div>
+                <div className="mat-chip">
+                  <div className="mat-chip-lbl">f<sub>yd</sub> = f<sub>yk</sub> / γ<sub>s</sub></div>
+                  <div className="mat-chip-val">{fyd} <span className="mat-chip-unit">MPa</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="panel-title">Geometria da secção</div>
+              <Num label="Largura -  b" value={b} onChange={setB} unit="m" step="0.05"/>
+              {mode === "simple" ? (
+                <>
+                  <Num label="Altura total - h" value={h} onChange={setH} unit="m" step="0.05"
+                    note="Altura total da secção"/>
+                  <Num label="Altura útil  d"
+                    value={d} onChange={setD} unit="m" step="0.05"
+                    note="Distância da face comprimida ao centróide da armadura de tracção"/>
+                </>
+              ) : (
+                <>
+                  <Num label="Altura total - h" value={h} onChange={setH} unit="m" step="0.05"/>
+                  <Num label="a  —  Altura útil"
+                    value={dp} onChange={setDp} unit="m" step="0.005"
+                    note="Dist. da fibra mais comprimida ao c.g. da armadura de tracção  (d′ = h − a)"/>
+                </>
+              )}
+              <div className="sec-props">
+                <div className="sec-props-title">Propriedades da secção</div>
+                <table><tbody>
                   <tr><td>Largura  b</td><td>{(bv*100).toFixed(0)} cm</td></tr>
                   {mode==="simple" ? (
                     <>
@@ -570,94 +931,89 @@ function App() {
                   {rho_pct && (
                     <tr><td className="hl">Taxa geométrica  ρ</td><td className="hl">{rho_pct} %</td></tr>
                   )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="panel">
-            <div className="panel-title">Esforços de cálculo</div>
-            <Num label="Momento  M_Ed" value={MEd} onChange={setMEd} unit="kN·m" step="1"/>
-            {mode === "composed" && (
-              <Num label="Esforço normal  N_Ed" value={NEd} onChange={setNEd} unit="kN" step="10"
-                note="Positivo = compressão"/>
-            )}
-          </div>
-        </div>
-
-        {/* ── Right column ── */}
-        <div>
-          {/* Diagram */}
-          <div className="diagram-panel">
-            <div className="panel-title">Diagrama da secção transversal</div>
-            <SectionDiagram mode={mode} b_m={b} d_m={d} h_m={h} dp_m={dp} result={result}/>
-            <div className="diagram-caption">
-              Linha tracejada vermelha = eixo neutro (x) &nbsp;·&nbsp; Zona azul = zona comprimida (até x) &nbsp;·&nbsp; Círculos = armadura
-              {mode==="simple" && <> &nbsp;·&nbsp; Zona cinzenta = h − d</>}
-            </div>
-          </div>
-
-          {/* Results */}
-          <div className="results-panel">
-            <div className="panel-title">Resultados do dimensionamento</div>
-
-            {result.error ? (
-              <div className="error-box">⚠  {result.error}</div>
-            ) : (<>
-              <div className="section-label">Grandezas adimensionais</div>
-              <Row name="μ  =  M_Ed / (b · d² · f_cd)"
-                sub={mode==="simple"
-                  ? `= ${(MEd*1e6).toExponential(2)} / (${(bv*1e3).toFixed(0)} × ${(d_eff*1e3).toFixed(0)}² × ${fcd})  [N·mm]`
-                  : `normalizado por b·h² — h = ${(hv*100).toFixed(0)} cm`}
-                value={result.mu?.toFixed(5)}/>
-              {mode==="composed" &&
-                <Row name="ν  =  N_Ed / (b · h · f_cd)"
-                  sub="positivo = compressão"
-                  value={result.nu?.toFixed(5)}/>}
-
-              <div className="section-label">Linha neutra</div>
-              <Row name={"ξ  =  x / "+(mode==="simple"?"d":"h")+" — posição relativa"}
-                value={result.xi?.toFixed(4)}/>
-              <Row name="x  — posição da linha neutra"
-                value={(result.xNA_m ? (result.xNA_m*100).toFixed(1) : (result.xi*(mode==="simple"?dv:hv)*100).toFixed(1))} unit="cm"/>
-
-              {mode==="composed" && (<>
-                <div className="section-label">Tensões no aço (ELU)</div>
-                <Row name="σ_s  — armadura comprimida (topo)"   value={result.ss_c} unit="MPa"
-                  sub={Math.abs(result.ss_c)>=fyd*0.99 ? "atingiu f_yd (cedência)" : "elástica"}/>
-                <Row name="σ_s  — armadura traccionada (base)" value={result.ss_t} unit="MPa"
-                  sub={Math.abs(result.ss_t)>=fyd*0.99 ? "atingiu f_yd (cedência)" : "elástica"}/>
-              </>)}
-
-              <div className="section-label">Taxa mecânica de armadura</div>
-              <Row name="ω  =  A_s · f_yd / (b · d · f_cd)"
-                sub="valor equivalente ao lido nas tabelas de Barros & Figueiras"
-                value={result.omega?.toFixed(5)} hl/>
-
-              <div className="section-label">Armadura necessária</div>
-              {mode==="simple" ? (<>
-                <Row name="A_s  =  ω · b · d · (f_cd / f_yd)"
-                  value={result.As_cm2?.toFixed(2)} unit="cm²" hl/>
-                {rho_pct && <Row name="Taxa geométrica  ρ  =  A_s / (b · d)"
-                  value={rho_pct} unit="%"/>}
-              </>) : (<>
-                <Row name="A_s,tot  =  ω · b · h · (f_cd / f_yd)"
-                  value={result.As_tot_cm2?.toFixed(2)} unit="cm²" hl/>
-                <Row name="A_s  =  A_s′  =  A_s,tot / 2  (armadura simétrica)"
-                  value={result.As_each_cm2?.toFixed(2)} unit="cm²  (cada face)"/>
-                {rho_pct && <Row name="Taxa geométrica  ρ  =  A_s / (b · d)"
-                  value={rho_pct} unit="%"/>}
-              </>)}
-
-              <div className="ec2-note">
-                Parâmetros do bloco EC2: &nbsp; λ = {result.lambda} &nbsp;·&nbsp; η = {result.eta} &nbsp;·&nbsp; ε<sub>cu3</sub> = {ecu3_str}
-                {mode==="composed" && <><br/>Armadura simétrica assumida — A<sub>s</sub> = A<sub>s</sub>′ &nbsp;·&nbsp; d′/h = {((hv-dpv)/hv||0).toFixed(3)}</>}
+                </tbody></table>
               </div>
-            </>)}
+            </div>
+
+            <div className="panel">
+              <div className="panel-title">Esforços de cálculo</div>
+              <Num label="Momento  M_Ed" value={MEd} onChange={setMEd} unit="kN·m" step="1"/>
+              {mode === "composed" && (
+                <Num label="Esforço normal  N_Ed" value={NEd} onChange={setNEd} unit="kN" step="10"
+                  note="Positivo = compressão"/>
+              )}
+            </div>
+          </div>
+
+          {/* Right column */}
+          <div>
+            <div className="diagram-panel">
+              <div className="panel-title">Diagrama da secção transversal</div>
+              <SectionDiagram mode={mode} b_m={b} d_m={d} h_m={h} dp_m={dp} result={bendResult}/>
+              <div className="diagram-caption">
+                Linha tracejada vermelha = eixo neutro (x) &nbsp;·&nbsp; Zona azul = zona comprimida (até x) &nbsp;·&nbsp; Círculos = armadura
+                {mode==="simple" && <> &nbsp;·&nbsp; Zona cinzenta = h − d</>}
+              </div>
+            </div>
+
+            <div className="results-panel">
+              <div className="panel-title">Resultados do dimensionamento</div>
+              {bendResult && bendResult.error ? (
+                <div className="error-box">⚠  {bendResult.error}</div>
+              ) : bendResult ? (<>
+                <div className="section-label">Grandezas adimensionais</div>
+                <Row name="μ  =  M_Ed / (b · d² · f_cd)"
+                  sub={mode==="simple"
+                    ? `= ${(MEd*1e6).toExponential(2)} / (${(bv*1e3).toFixed(0)} × ${(d_eff*1e3).toFixed(0)}² × ${fcd})  [N·mm]`
+                    : `normalizado por b·h² — h = ${(hv*100).toFixed(0)} cm`}
+                  value={bendResult.mu?.toFixed(5)}/>
+                {mode==="composed" &&
+                  <Row name="ν  =  N_Ed / (b · h · f_cd)" sub="positivo = compressão"
+                    value={bendResult.nu?.toFixed(5)}/>}
+
+                <div className="section-label">Linha neutra</div>
+                <Row name={"ξ  =  x / "+(mode==="simple"?"d":"h")+" — posição relativa"}
+                  value={bendResult.xi?.toFixed(4)}/>
+                <Row name="x  — posição da linha neutra"
+                  value={(bendResult.xNA_m ? (bendResult.xNA_m*100).toFixed(1) : (bendResult.xi*(mode==="simple"?dv:hv)*100).toFixed(1))} unit="cm"/>
+
+                {mode==="composed" && (<>
+                  <div className="section-label">Tensões no aço (ELU)</div>
+                  <Row name="σ_s  — armadura comprimida (topo)"   value={bendResult.ss_c} unit="MPa"
+                    sub={Math.abs(bendResult.ss_c)>=(fyd*0.99) ? "atingiu f_yd (cedência)" : "elástica"}/>
+                  <Row name="σ_s  — armadura traccionada (base)" value={bendResult.ss_t} unit="MPa"
+                    sub={Math.abs(bendResult.ss_t)>=(fyd*0.99) ? "atingiu f_yd (cedência)" : "elástica"}/>
+                </>)}
+
+                <div className="section-label">Taxa mecânica de armadura</div>
+                <Row name="ω  =  A_s · f_yd / (b · d · f_cd)"
+                  sub="valor equivalente ao lido nas tabelas de Barros & Figueiras"
+                  value={bendResult.omega?.toFixed(5)} hl/>
+
+                <div className="section-label">Armadura necessária</div>
+                {mode==="simple" ? (<>
+                  <Row name="A_s  =  ω · b · d · (f_cd / f_yd)"
+                    value={bendResult.As_cm2?.toFixed(2)} unit="cm²" hl/>
+                  {rho_pct && <Row name="Taxa geométrica  ρ  =  A_s / (b · d)"
+                    value={rho_pct} unit="%"/>}
+                </>) : (<>
+                  <Row name="A_s,tot  =  ω · b · h · (f_cd / f_yd)"
+                    value={bendResult.As_tot_cm2?.toFixed(2)} unit="cm²" hl/>
+                  <Row name="A_s  =  A_s′  =  A_s,tot / 2  (armadura simétrica)"
+                    value={bendResult.As_each_cm2?.toFixed(2)} unit="cm²  (cada face)"/>
+                  {rho_pct && <Row name="Taxa geométrica  ρ  =  A_s / (b · d)"
+                    value={rho_pct} unit="%"/>}
+                </>)}
+
+                <div className="ec2-note">
+                  Parâmetros do bloco EC2: &nbsp; λ = {bendResult.lambda} &nbsp;·&nbsp; η = {bendResult.eta} &nbsp;·&nbsp; ε<sub>cu3</sub> = {ecu3_str}
+                  {mode==="composed" && <><br/>Armadura simétrica assumida — A<sub>s</sub> = A<sub>s</sub>′ &nbsp;·&nbsp; d′/h = {((hv-dpv)/hv||0).toFixed(3)}</>}
+                </div>
+              </>) : null}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="page-footer">
         EN 1992-1-1 &nbsp;·&nbsp; γ<sub>c</sub> = 1.5 &nbsp;·&nbsp; γ<sub>s</sub> = 1.15 &nbsp;·&nbsp;

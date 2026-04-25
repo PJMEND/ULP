@@ -1,0 +1,39 @@
+a_0/2≤H≤2/3 a_0
+0.525≤H≤0.7
+a_(0,x)=1.05 m
+a_(0,y)=0.825 m
+Seja:
+H=0.55 m
+d=0.50 m
+Critério de contorno → a = d
+u=5.24 m
+A_O=2×(0.6×0.50)+2×(0.45×0.5)+0.6×0.45+π×〖0.45〗^2=2.11 m^2
+σ_O=229.28 kPa 
+σ_O=〖ΔV〗_Ed/A_O ⇔〖ΔV〗_Ed=229.28×2.11=482.72 kN 
+V_(Rd,red)≅1300-482.72=817.28 kN
+σ_Ed=817.28/ud=311.84 MPa
+σ_(Rd,c)=C_(Rd,c) k(100ρf_ck )^(1/3)×2d/a=0.607 MPa
+k=1+√(200/500)=1.63≤2
+v_min=0.035×k^(3/2)×f_ck^(1/2)×2d/a=0.728 MPa
+σ_(Rd,c)≅728 kPa
+σ_Rd≥σ_Ed OK
+ 
+V_ed=(σ_1+σ_3)/2×(a_(0,x)-d)×B_y-σ_3×2×〖0.325〗^2/2
+V_ed=(448.76+359.34)/2×0.55×2.1-359.34×2×〖0.325〗^2/2=428.72 kN
+σ_(Rd,c)=C_(Rd,c) k(100ρf_ck )^(1/3)×2d/a=0.12×1.63×(100×0.0015×25)^(1/3)×2=0.607 MPa
+k=1+√(200/500)=1.63≤2
+v_min=0.035×k^(3/2)×f_ck^(1/2)×2d/a=0.7283  MPa
+Logo escolhendo o maior valor V_(Rd,c)≅728.3 kPa
+V_Rd=V_(Rd,c)×b^'×d=728.3×(0.45+0.5)×0.5=345.97 kN
+V_Rd<V_Ed KO
+
+	-Aumentei 10cm visto que o valor da tensão de cálculo é bastante inferior à tensão resistente.
+Seja:
+H=0.65 m
+d=0.60 m
+V_ed=(448.76+375.60)/2×0.45×2.1-375.60×2×〖0.225〗^2/2=370.49 kN
+σ_(Rd,c)=C_(Rd,c) k(100ρf_ck )^(1/3)×2d/a=0.12×1.58×(100×0.0015×25)^(1/3)×2=0.589 MPa
+v_min=0.035×k^(3/2)×f_ck^(1/2)×2d/a=0.695  MPa
+Logo escolhendo o maior valor V_(Rd,c)≅695 kPa
+V_Rd=V_(Rd,c)×b^'×d=695×(0.45+0.6)×0.6=437.92 kPa
+V_Rd>V_Ed OK
