@@ -913,7 +913,7 @@ function App() {
 
                 {/* ── Reinforcement design ── */}
                 <div className="section-label">Dimensionamento da armadura de flexão</div>
-                <Row name="l_x = a₀ₓ + 0.15·b_x  (braço de alavanca x)"
+                <Row name="l_x = a₀ₓ + 0.15·b_x"
                   sub={`= ${punchResult.a0x.toFixed(3)} + 0.15×${(+bxCol).toFixed(2)} = ${punchResult.lx.toFixed(3)} m`}
                   value={punchResult.lx.toFixed(3)} unit="m"/>
                 <Row name="σ_lx (pressão na secção crítica de flexão, face de b_x)"
@@ -929,7 +929,7 @@ function App() {
                   sub={`= ${punchResult.Asx_cm2.toFixed(2)} / ${(+ByFoot).toFixed(2)}`}
                   value={punchResult.Asx_cm2m.toFixed(2)} unit="cm²/m"/>
 
-                <Row name="l_y = a₀ᵧ + 0.15·b_y  (braço de alavanca y)"
+                <Row name="l_y = a₀ᵧ + 0.15·b_y"
                   sub={`= ${punchResult.a0y.toFixed(3)} + 0.15×${(+byCol).toFixed(2)} = ${punchResult.ly.toFixed(3)} m`}
                   value={punchResult.ly.toFixed(3)} unit="m"/>
                 <Row name="σ_ref = (σ_méd + σ₁)/2  (pressão equivalente, direcção y)"
