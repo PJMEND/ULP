@@ -163,11 +163,14 @@ function solvePureBending(MEd_kNm, b_m, d_m, fck, fyk) {
 }
 
 /* ── Solver: bending + axial ────────────────────────────────────────────── */
+/* dp_m = a = d  (distância da fibra mais comprimida ao c.g. da armadura de tracção)
+   d' = h - a  (distância da fibra comprimida ao c.g. da armadura de compressão)
+   dph = d'/h = (h - a)/h                                                         */
 function solveBendingAxial(MEd_kNm, NEd_kN, b_m, h_m, dp_m, fck, fyk) {
   const { lambda, eta } = getLambdaEta(fck);
   const fcd = fck / 1.5, fyd = Math.min(fyk / 1.15, 600);
   const Es = 200000, ecu3 = getEcu3(fck);
-  const b = b_m * 1000, h = h_m * 1000, dph = dp_m / h_m;
+  const b = b_m * 1000, h = h_m * 1000, dph = (h_m - dp_m) / h_m;  // d'/h = (h-a)/h
   const mu = (MEd_kNm * 1e6) / (b * h * h * fcd);
   const nu = (NEd_kN  * 1e3) / (b * h * fcd);
   const strains = xi => ({
@@ -216,29 +219,33 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
   const bv  = Math.max(+b_m  || 0.001, 0.001);
   // Always use h for the section outline height
   const hv  = Math.max(+h_m  || 0.001, 0.001);
-  // d = effective depth (where tension steel sits)
-  const dv  = mode === "simple" ? (+d_m || 0.45) : (+h_m || 0.5) - (+dp_m || 0.05);
-  const dpv = +dp_m || 0.05;
+  // For simple bending: dv = d (input directly)
+  // For composed:       dv = a = d (input directly — a is the effective depth)
+  const dv  = mode === "simple" ? (+d_m || 0.45) : (+dp_m || 0.45);
+  // dpv = a (effective depth) for composed; d' = h - a
+  const dpv = +dp_m || 0.45;
 
   const sc = Math.min(aw / bv, ah / hv);
   const sW = bv * sc, sH = hv * sc;
   const ox = LEFT + (aw - sW) / 2;
   const oy = TOP  + (ah - sH) / 2;
 
-  /* Neutral axis — for simple bending xNA_m is relative to d, keep as-is (relative to top) */
+  /* Neutral axis — position relative to top of section */
   const xNA = result && !result.error ? Math.min(result.xNA_m || 0, hv) : null;
   const xNA_y = xNA !== null ? oy + xNA * sc : null;
 
-  /* Steel positions in SVG y — tension steel at d from top, compression at dp from top */
+  /* Steel positions in SVG y:
+     - tension steel at d from top (= dv)
+     - compression steel at d' = h - a from top (composed mode) */
   const yTens = oy + dv * sc;
-  const yComp = mode === "composed" ? oy + dpv * sc : null;
+  const yComp = mode === "composed" ? oy + (hv - dpv) * sc : null;
 
   /* Cover zone at bottom for simple bending (h - d) */
   const coverH = mode === "simple" ? (hv - dv) * sc : 0;
 
-  /* Compression block */
+  /* Compression zone — spans from top face down to neutral axis (x) */
   const lam = (result && result.lambda) || 0.8;
-  const blockH = xNA !== null ? Math.min(lam * xNA, hv) * sc : 0;
+  const blockH = xNA !== null ? Math.min(xNA, hv) * sc : 0;
 
   /* Text styles */
   const T  = { fontSize: 11, fontFamily: "Arial, sans-serif", fill: "#333" };
@@ -270,10 +277,10 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
           fill="rgba(200,200,200,0.18)" stroke="none"/>
       )}
 
-      {/* Compression block fill */}
+      {/* Compression zone fill — full zone from top to neutral axis (x) */}
       {blockH > 1 && (
         <rect x={ox} y={oy} width={sW} height={blockH}
-          fill="rgba(44,82,130,0.13)" stroke="none"/>
+          fill="rgba(44,82,130,0.15)" stroke="none"/>
       )}
 
       {/* Section outline */}
@@ -332,13 +339,13 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
         h = {(hv*100).toFixed(0)} cm
       </text>
 
-      {/* d — left arrow from top to steel centroid (blue) */}
+      {/* d — left arrow from top to tension steel centroid (blue) */}
       <Arrow x1={ox-20} y1={oy} x2={ox-20} y2={yTens} col="#2c5282"/>
       <line x1={ox-28} y1={oy}    x2={ox-12} y2={oy}    stroke="#2c5282" strokeWidth={1}/>
       <line x1={ox-28} y1={yTens} x2={ox-12} y2={yTens} stroke="#2c5282" strokeWidth={1}/>
       <text x={ox-32} y={oy+(yTens-oy)/2+4} textAnchor="middle" style={{...TB, fontStyle:"italic", fontSize:10}}
         transform={`rotate(-90,${ox-32},${oy+(yTens-oy)/2})`}>
-        d = {(dv*100).toFixed(0)} cm
+        {mode==="composed" ? "a" : "d"} = {(dv*100).toFixed(0)} cm
       </text>
 
       {/* h-d cover annotation for simple bending */}
@@ -353,12 +360,16 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
         </>
       )}
 
-      {/* d' — small bracket (composed) */}
+      {/* d' bracket (composed) — compression steel at h-a from top */}
       {mode==="composed" && yComp !== null && (
         <>
           <line x1={ox-8} y1={oy}     x2={ox-8} y2={yComp} stroke="#aaa" strokeWidth={1} strokeDasharray="3,2"/>
           <line x1={ox-13} y1={oy}    x2={ox-3} y2={oy}    stroke="#aaa" strokeWidth={1}/>
           <line x1={ox-13} y1={yComp} x2={ox-3} y2={yComp} stroke="#aaa" strokeWidth={1}/>
+          <text x={ox-32} y={oy+(yComp-oy)/2+4} textAnchor="middle"
+            style={{...TG, fontSize:9}} transform={`rotate(-90,${ox-32},${oy+(yComp-oy)/2})`}>
+            d′={(((hv-dpv)*100).toFixed(1))}cm
+          </text>
           <text x={ox+sW+8} y={yComp+4} style={{...TG, fontStyle:"italic"}}>A_s′</text>
         </>
       )}
@@ -373,7 +384,7 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
         </text>
       )}
 
-      {/* "comp." label inside block */}
+      {/* "zona comp." label inside compression zone */}
       {blockH > 22 && (
         <text x={ox+sW/2} y={oy+blockH/2+4} textAnchor="middle"
           style={{fontSize:9, fontFamily:"Arial,sans-serif", fill:"#2c5282"}}>zona comp.</text>
@@ -439,7 +450,7 @@ function App() {
   const [b,  setB]  = useState("0.30");
   const [d,  setD]  = useState("0.45");
   const [h,  setH]  = useState("0.50");
-  const [dp, setDp] = useState("0.05");
+  const [dp, setDp] = useState("0.45");  // a = d (altura útil, não recobrimento)
   const [MEd, setMEd] = useState("150");
   const [NEd, setNEd] = useState("0");
 
@@ -454,7 +465,8 @@ function App() {
   /* Derived section properties */
   const bv = +b||0, hv = +h||0, dv = +d||0, dpv = +dp||0;
   const h_eff  = hv;  // always use total height h for gross section properties
-  const d_eff  = mode==="simple" ? dv : hv - dpv;
+  // d_eff: for simple = d; for composed = a (input dp is a = d directly)
+  const d_eff  = mode==="simple" ? dv : dpv;
   const Ac_cm2 = (bv*100 * h_eff*100).toFixed(0);
   const I_cm4  = ((bv*100) * Math.pow(h_eff*100, 3) / 12).toFixed(0);
   const W_cm3  = ((bv*100) * Math.pow(h_eff*100, 2) / 6).toFixed(0);
@@ -526,9 +538,9 @@ function App() {
             ) : (
               <>
                 <Num label="Altura total - h" value={h} onChange={setH} unit="m" step="0.05"/>
-                <Num label="Recobrimento  a  (face a face)"
+                <Num label="a  —  Altura útil"
                   value={dp} onChange={setDp} unit="m" step="0.005"
-                  note="Distância da face à armadura (ambas as faces simétricas)"/>
+                  note="Dist. da fibra mais comprimida ao c.g. da armadura de tracção  (d′ = h − a)"/>
               </>
             )}
 
@@ -547,9 +559,9 @@ function App() {
                   ) : (
                     <>
                       <tr><td>Altura total  h</td><td>{(hv*100).toFixed(0)} cm</td></tr>
-                      <tr><td>Recobrimento  a</td><td>{(dpv*100).toFixed(1)} cm</td></tr>
-                      <tr><td>Altura útil  d = h − d′</td><td>{(d_eff*100).toFixed(1)} cm</td></tr>
-                      <tr><td>d′ / h</td><td>{(dpv/hv||0).toFixed(3)}</td></tr>
+                      <tr><td>Altura útil  a = d</td><td>{(dpv*100).toFixed(1)} cm</td></tr>
+                      <tr><td>d′ = h − a</td><td>{((hv-dpv)*100).toFixed(1)} cm</td></tr>
+                      <tr><td>d′ / h</td><td>{((hv-dpv)/hv||0).toFixed(3)}</td></tr>
                     </>
                   )}
                   <tr><td>Área bruta  A<sub>c</sub> = b · h</td><td>{Ac_cm2} cm²</td></tr>
@@ -581,8 +593,8 @@ function App() {
             <div className="panel-title">Diagrama da secção transversal</div>
             <SectionDiagram mode={mode} b_m={b} d_m={d} h_m={h} dp_m={dp} result={result}/>
             <div className="diagram-caption">
-              Linha a tracejado vermelho = eixo neutro (x) &nbsp;·&nbsp; Zona azul = bloco de compressão &nbsp;·&nbsp; Círculos = armadura
-              {mode==="simple" && <> &nbsp;·&nbsp; Zona cinzenta = recobrimento (h − d)</>}
+              Linha tracejada vermelha = eixo neutro (x) &nbsp;·&nbsp; Zona azul = zona comprimida (até x) &nbsp;·&nbsp; Círculos = armadura
+              {mode==="simple" && <> &nbsp;·&nbsp; Zona cinzenta = h − d</>}
             </div>
           </div>
 
@@ -646,7 +658,7 @@ function App() {
 
               <div className="ec2-note">
                 Parâmetros do bloco EC2: &nbsp; λ = {result.lambda} &nbsp;·&nbsp; η = {result.eta} &nbsp;·&nbsp; ε<sub>cu3</sub> = {ecu3_str}
-                {mode==="composed" && <><br/>Armadura simétrica assumida — A<sub>s</sub> = A<sub>s</sub>′ &nbsp;·&nbsp; d′/h = {(dpv/hv||0).toFixed(3)}</>}
+                {mode==="composed" && <><br/>Armadura simétrica assumida — A<sub>s</sub> = A<sub>s</sub>′ &nbsp;·&nbsp; d′/h = {((hv-dpv)/hv||0).toFixed(3)}</>}
               </div>
             </>)}
           </div>
