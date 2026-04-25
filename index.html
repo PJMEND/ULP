@@ -208,8 +208,8 @@ function solveBendingAxial(MEd_kNm, NEd_kN, b_m, h_m, dp_m, fck, fyk) {
   };
 }
 
-/* ── Punching shear solver (EN 1992-1-1 §6.4) ───────────────────────────── */
-function solvePunching(bx, by, Bx, By, hF, cov, phiMM, rhoL_pct, VEd_kN, MEd_kNm, fck) {
+/* ── Punching shear solver (EN 1992-1-1 6.4) ───────────────────────────── */
+function solvePunching(bx, by, Bx, By, hF, cov, phiMM, rhoL_pct, VEd_kN, MEd_kNm, fck, fyk) {
   if (bx <= 0 || by <= 0 || Bx <= 0 || By <= 0 || hF <= 0) return { error: "Geometria inválida." };
   if (bx >= Bx || by >= By) return { error: "Pilar deve ser menor que a sapata (bx < Bx, by < By)." };
   const phi_m = phiMM / 1000;
@@ -221,7 +221,7 @@ function solvePunching(bx, by, Bx, By, hF, cov, phiMM, rhoL_pct, VEd_kN, MEd_kNm
   const a0x = (Bx - bx) / 2;  // overhang in x = a_(0,x)
   const a0y = (By - by) / 2;  // overhang in y = a_(0,y)
 
-  /* EC2 basic control perimeter at d — 4 quarter-circles at corners (§6.4.2) */
+  /* EC2 basic control perimeter at d — 4 quarter-circles at corners (6.4.2) */
   const u_crit = 2 * (bx + by) + 2 * Math.PI * d;               // m
   const A_crit = bx * by + 2 * (bx + by) * d + Math.PI * d * d; // m²
   const A_foot = Bx * By;                                         // m²
@@ -240,7 +240,7 @@ function solvePunching(bx, by, Bx, By, hF, cov, phiMM, rhoL_pct, VEd_kN, MEd_kNm
   /* Punching shear stress (β = 1.0, centric) */
   const vEd = VEd_red / (u_crit * d) * 0.001;  // MPa
 
-  /* EC2 resistance with 2d/a factor (a = d → factor = 2, §6.4.4(2)) */
+  /* EC2 resistance with 2d/a factor (a = d → factor = 2, 6.4.4(2)) */
   const rhoL  = Math.min(rhoL_pct / 100, 0.02);
   const k     = Math.min(1 + Math.sqrt(200 / d_mm), 2.0);
   const CRdc  = 0.12;
@@ -249,7 +249,7 @@ function solvePunching(bx, by, Bx, By, hF, cov, phiMM, rhoL_pct, VEd_kN, MEd_kNm
   const vmin      = 0.035 * Math.pow(k, 1.5) * Math.sqrt(fck) * f2da;
   const vRdc      = Math.max(vRdc_calc, vmin);  // MPa
 
-  /* One-way shear check at critical section on high-pressure side (§6.4 – cortante) */
+  /* One-way shear check at critical section on high-pressure side (6.4 – esforço transverso) */
   const canSection = a0x > d && MEd_kNm >= 0;
   let VEd_sect = null, VRd_sect = null, ok_sect = null;
   if (canSection) {
@@ -268,6 +268,26 @@ function solvePunching(bx, by, Bx, By, hF, cov, phiMM, rhoL_pct, VEd_kN, MEd_kNm
   const fcd     = fck / 1.5;
   const vRd_max = 0.5 * nu_v * fcd;               // MPa
 
+  /* Reinforcement design (bending at footing base) */
+  const fyd_kPa = (fyk / 1.15) * 1000;  // kN/m²
+
+  // x-direction: trapezoidal pressure on cantilever lx
+  const lx      = a0x + 0.15 * bx;                              // cantilever arm [m]
+  const sigma_lx = sigma1 - (sigma1 - sigma2) * lx / Bx;       // stress at critical bending section
+  const M_Ed1    = sigma_lx * lx * lx * By / 2
+                 + (sigma1 - sigma_lx) * lx * lx * By / 3;     // [kNm]
+  const Asx_m2   = M_Ed1 / (0.85 * d * fyd_kPa);               // [m²]
+  const Asx_cm2  = Asx_m2 * 1e4;                                 // [cm²] total over By
+  const Asx_cm2m = Asx_cm2 / By;                                 // [cm²/m]
+
+  // y-direction: rectangular equivalent pressure on cantilever ly
+  const ly       = a0y + 0.15 * by;                             // cantilever arm [m]
+  const sigma_ref = (sigma_avg + sigma1) / 2;                   // average over right half [kN/m²]
+  const M_Ed2    = sigma_ref * Bx * ly * ly / 2;                // [kNm]
+  const Asy_m2   = M_Ed2 / (0.85 * d * fyd_kPa);               // [m²]
+  const Asy_cm2  = Asy_m2 * 1e4;                                 // [cm²] total over Bx
+  const Asy_cm2m = Asy_cm2 / Bx;                                 // [cm²/m]
+
   return {
     d, d_mm, k, a0x, a0y,
     u_crit, A_crit, A_foot,
@@ -276,6 +296,9 @@ function solvePunching(bx, by, Bx, By, hF, cov, phiMM, rhoL_pct, VEd_kN, MEd_kNm
     rhoL, CRdc, f2da, vRdc_calc, vmin, vRdc,
     canSection, VEd_sect, VRd_sect, ok_sect,
     u_col, vEd_col, nu_v, fcd, vRd_max,
+    fyd_kPa,
+    lx, sigma_lx, M_Ed1, Asx_cm2, Asx_cm2m,
+    ly, sigma_ref, M_Ed2, Asy_cm2, Asy_cm2m,
     critExceedsX: d > a0x,
     critExceedsY: d > a0y,
     ok:     vEd     <= vRdc,
@@ -670,7 +693,7 @@ function App() {
 
   /* Punching result */
   const punchResult = mode === "punching"
-    ? solvePunching(+bxCol,+byCol,+BxFoot,+ByFoot,+hFoot,+covFoot,+phiFoot,+rhoFoot,+VEdFoot,+MEdFoot,fck)
+    ? solvePunching(+bxCol,+byCol,+BxFoot,+ByFoot,+hFoot,+covFoot,+phiFoot,+rhoFoot,+VEdFoot,+MEdFoot,fck,fyk)
     : null;
 
   /* Bending section props */
@@ -722,14 +745,15 @@ function App() {
             <div className="panel">
               <div className="panel-title">Materiais</div>
               <Sel label="Classe de betão" value={fckI} onChange={setFckI} options={CONCRETE}/>
+              <Sel label="Aço" value={fykI} onChange={setFykI} options={STEEL}/>
               <div className="mat-row">
                 <div className="mat-chip">
                   <div className="mat-chip-lbl">f<sub>cd</sub> = f<sub>ck</sub> / γ<sub>c</sub></div>
                   <div className="mat-chip-val">{fcd} <span className="mat-chip-unit">MPa</span></div>
                 </div>
                 <div className="mat-chip">
-                  <div className="mat-chip-lbl">ν = 0.6(1 − f<sub>ck</sub>/250)</div>
-                  <div className="mat-chip-val">{(0.6*(1-fck/250)).toFixed(3)}</div>
+                  <div className="mat-chip-lbl">f<sub>yd</sub> = f<sub>yk</sub> / γ<sub>s</sub></div>
+                  <div className="mat-chip-val">{fyd} <span className="mat-chip-unit">MPa</span></div>
                 </div>
               </div>
             </div>
@@ -796,12 +820,12 @@ function App() {
                 bxCol={bxCol} byCol={byCol} Bx={BxFoot} By={ByFoot}
                 hFoot={hFoot} result={punchResult}/>
               <div className="diagram-caption">
-                Zona vermelha tracejada = perímetro crítico u₁ a d da face do pilar (quartos de círculo nas arestas) &nbsp;·&nbsp; Zona cinzenta escura = pilar
+                Zona vermelha tracejada = perímetro crítico u₁ a d da face do pilar &nbsp;·&nbsp; Zona cinzenta escura = pilar
               </div>
             </div>
 
             <div className="results-panel">
-              <div className="panel-title">Verificação ao punçoamento — EN 1992-1-1 §6.4</div>
+              <div className="panel-title">Verificação ao punçoamento — EN 1992-1-1 6.4</div>
 
               {punchResult && punchResult.error ? (
                 <div className="error-box">⚠  {punchResult.error}</div>
@@ -816,7 +840,7 @@ function App() {
                   </div>
                 )}
 
-                <div className="section-label">Perímetro crítico (secção a d da face — quartos de círculo nas arestas)</div>
+                <div className="section-label">Perímetro de controlo</div>
                 <Row name="u₁ = 2(b_x + b_y) + 2πd"
                   sub={`= 2(${(+bxCol).toFixed(2)} + ${(+byCol).toFixed(2)}) + 2π×${punchResult.d.toFixed(3)}`}
                   value={punchResult.u_crit.toFixed(3)} unit="m"/>
@@ -825,18 +849,18 @@ function App() {
                   value={punchResult.A_crit.toFixed(4)} unit="m²"/>
                 <Row name="A_sapata = B_x × B_y" value={punchResult.A_foot.toFixed(3)} unit="m²"/>
 
-                <div className="section-label">Força de punçoamento reduzida</div>
+                <div className="section-label">Força de punçoamento</div>
                 <Row name="σ_méd = (σ₁+σ₂)/2 = V_Ed / (B_x·B_y)" value={punchResult.sigma_avg.toFixed(2)} unit="kN/m²"/>
                 <Row name="V_Ed,red = V_Ed − σ_méd × A_crit"
                   sub={`= ${(+VEdFoot).toFixed(1)} − ${punchResult.sigma_avg.toFixed(2)} × ${punchResult.A_crit.toFixed(4)}`}
                   value={punchResult.VEd_red.toFixed(2)} unit="kN"/>
 
                 <div className="section-label">Tensão de punçoamento actuante</div>
-                <Row name="v_Ed = V_Ed,red / (u_crit · d)"
+                <Row name="v_Ed = V_Ed,red / (u_1 · d)"
                   sub={`= ${punchResult.VEd_red.toFixed(2)} / (${punchResult.u_crit.toFixed(3)} × ${punchResult.d.toFixed(3)}) × 10⁻³`}
                   value={punchResult.vEd.toFixed(4)} unit="MPa" hl/>
 
-                <div className="section-label">Resistência ao punçoamento (sem armadura, §6.4.4)</div>
+                <div className="section-label">Resistência ao punçoamento (sem armadura, 6.4.4)</div>
                 <Row name="k = 1 + √(200/d)  [d em mm]"
                   sub={`= 1 + √(200/${punchResult.d_mm.toFixed(0)}) = ${punchResult.k.toFixed(3)} ≤ 2.0`}
                   value={punchResult.k.toFixed(3)}/>
@@ -857,7 +881,7 @@ function App() {
                   ok={punchResult.ok} err={!punchResult.ok}/>
 
                 {punchResult.canSection && (<>
-                  <div className="section-label">Verificação ao cortante — secção na face do perímetro crítico (lado σ₁)</div>
+                  <div className="section-label">Verificação ao esforço transverso — secção na face do perímetro crítico</div>
                   <Row name="V_Ed,sect = (σ₁+σ₃)/2 · (a₀ₓ−d) · B_y − σ₃ · (a₀ᵧ−d)²"
                     sub={`= (${punchResult.sigma1.toFixed(2)}+${punchResult.sigma3.toFixed(2)})/2 × ${(punchResult.a0x-punchResult.d).toFixed(3)} × ${(+ByFoot).toFixed(2)} − ${punchResult.sigma3.toFixed(2)} × ${(Math.max(0,punchResult.a0y-punchResult.d)**2).toFixed(4)}`}
                     value={punchResult.VEd_sect.toFixed(2)} unit="kN" hl/>
@@ -867,7 +891,7 @@ function App() {
                     sub={`= ${(punchResult.vRdc*1000).toFixed(1)} × ${(+byCol+punchResult.d).toFixed(3)} × ${punchResult.d.toFixed(3)}`}
                     value={punchResult.VRd_sect.toFixed(2)} unit="kN" hl/>
                   <Row
-                    name={punchResult.ok_sect ? "✓  V_Rd ≥ V_Ed,sect — VERIFICA (cortante)" : "✗  V_Rd < V_Ed,sect — NÃO VERIFICA (cortante)"}
+                    name={punchResult.ok_sect ? "✓  V_Rd ≥ V_Ed,sect — VERIFICA" : "✗  V_Rd < V_Ed,sect — NÃO VERIFICA"}
                     sub={`UC = ${(punchResult.VEd_sect/punchResult.VRd_sect).toFixed(3)}`}
                     value={`${(punchResult.VEd_sect/punchResult.VRd_sect*100).toFixed(1)} %`}
                     ok={punchResult.ok_sect} err={!punchResult.ok_sect}/>
@@ -887,10 +911,42 @@ function App() {
                   value={`${(punchResult.UCR_col*100).toFixed(1)} %`}
                   ok={punchResult.ok_col} err={!punchResult.ok_col}/>
 
+                {/* ── Reinforcement design ── */}
+                <div className="section-label">Dimensionamento da armadura de flexão</div>
+                <Row name="l_x = a₀ₓ + 0.15·b_x  (braço de alavanca x)"
+                  sub={`= ${punchResult.a0x.toFixed(3)} + 0.15×${(+bxCol).toFixed(2)} = ${punchResult.lx.toFixed(3)} m`}
+                  value={punchResult.lx.toFixed(3)} unit="m"/>
+                <Row name="σ_lx (pressão na secção crítica de flexão, face de b_x)"
+                  sub={`= σ₁ − (σ₁−σ₂)×l_x/B_x = ${punchResult.sigma1.toFixed(2)} − ${(punchResult.sigma1-punchResult.sigma2).toFixed(2)}×${punchResult.lx.toFixed(3)}/${(+BxFoot).toFixed(2)}`}
+                  value={punchResult.sigma_lx.toFixed(2)} unit="kN/m²"/>
+                <Row name="M_Ed,1 = σ_lx·l_x²·B_y/2 + (σ₁−σ_lx)·l_x²·B_y/3"
+                  sub={`= ${punchResult.sigma_lx.toFixed(2)}×${punchResult.lx.toFixed(3)}²×${(+ByFoot).toFixed(2)}/2 + ${(punchResult.sigma1-punchResult.sigma_lx).toFixed(2)}×${punchResult.lx.toFixed(3)}²×${(+ByFoot).toFixed(2)}/3`}
+                  value={punchResult.M_Ed1.toFixed(2)} unit="kNm" hl/>
+                <Row name="A_sx = M_Ed,1 / (0.85·d·f_yd)  [total]"
+                  sub={`= ${punchResult.M_Ed1.toFixed(2)} / (0.85×${punchResult.d.toFixed(3)}×${(punchResult.fyd_kPa/1000).toFixed(0)} MPa)`}
+                  value={punchResult.Asx_cm2.toFixed(2)} unit="cm²" hl/>
+                <Row name="A_sx  [por metro de largura, ÷ B_y]"
+                  sub={`= ${punchResult.Asx_cm2.toFixed(2)} / ${(+ByFoot).toFixed(2)}`}
+                  value={punchResult.Asx_cm2m.toFixed(2)} unit="cm²/m"/>
+
+                <Row name="l_y = a₀ᵧ + 0.15·b_y  (braço de alavanca y)"
+                  sub={`= ${punchResult.a0y.toFixed(3)} + 0.15×${(+byCol).toFixed(2)} = ${punchResult.ly.toFixed(3)} m`}
+                  value={punchResult.ly.toFixed(3)} unit="m"/>
+                <Row name="σ_ref = (σ_méd + σ₁)/2  (pressão equivalente, direcção y)"
+                  sub={`= (${punchResult.sigma_avg.toFixed(2)} + ${punchResult.sigma1.toFixed(2)})/2`}
+                  value={punchResult.sigma_ref.toFixed(2)} unit="kN/m²"/>
+                <Row name="M_Ed,2 = σ_ref·B_x·l_y²/2"
+                  sub={`= ${punchResult.sigma_ref.toFixed(2)}×${(+BxFoot).toFixed(2)}×${punchResult.ly.toFixed(3)}²/2`}
+                  value={punchResult.M_Ed2.toFixed(2)} unit="kNm" hl/>
+                <Row name="A_sy = M_Ed,2 / (0.85·d·f_yd)  [total]"
+                  sub={`= ${punchResult.M_Ed2.toFixed(2)} / (0.85×${punchResult.d.toFixed(3)}×${(punchResult.fyd_kPa/1000).toFixed(0)} MPa)`}
+                  value={punchResult.Asy_cm2.toFixed(2)} unit="cm²" hl/>
+                <Row name="A_sy  [por metro de largura, ÷ B_x]"
+                  sub={`= ${punchResult.Asy_cm2.toFixed(2)} / ${(+BxFoot).toFixed(2)}`}
+                  value={punchResult.Asy_cm2m.toFixed(2)} unit="cm²/m"/>
+
                 <div className="ec2-note">
-                  Perímetro de controlo a d da face do pilar — quartos de círculo nas arestas (EC2 §6.4.2) · Resistência com factor 2d/a (§6.4.4) · β = 1.0 ·
-                  C<sub>Rd,c</sub> = 0.18/γ<sub>c</sub> = 0.12 · ρ<sub>l</sub> limitado a 2% ·
-                  Referência: EN 1992-1-1, §6.4
+                  Referência: EN 1992-1-1, 6.4
                 </div>
               </>) : null}
             </div>
