@@ -619,14 +619,8 @@ function App() {
               <div className="section-label">Linha neutra</div>
               <Row name={"ξ  =  x / "+(mode==="simple"?"d":"h")+" — posição relativa"}
                 value={result.xi?.toFixed(4)}/>
-              <Row name="x  — profundidade da linha neutra"
+              <Row name="x  — posição da linha neutra"
                 value={(result.xNA_m ? (result.xNA_m*100).toFixed(1) : (result.xi*(mode==="simple"?dv:hv)*100).toFixed(1))} unit="cm"/>
-              {mode==="simple" && (
-                <Row name="z  — braço de alavanca  (z = d · z/d)"
-                  sub={`z/d = ${result.zd?.toFixed(3)}`}
-                  value={(result.z_m ? (result.z_m*100).toFixed(1) : (result.zd*(dv)*100).toFixed(1))} unit="cm"/>
-              )}
-              <Row name="Domínio de deformação" value={<Badge domain={result.domain}/>}/>
 
               {mode==="composed" && (<>
                 <div className="section-label">Tensões no aço (ELU)</div>
