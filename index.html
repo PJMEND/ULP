@@ -26,7 +26,7 @@ input, select, button { font-family: Georgia, 'Times New Roman', serif; font-siz
 h1 { font-size: 20px; font-weight: normal; color: #1a1e2e; }
 .header-sub { font-size: 12px; color: #666; margin-top: 4px; font-family: Arial, sans-serif; }
 
-.mode-row { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid #1a1e2e; border-radius: 4px; overflow: hidden; width: fit-content; }
+.mode-row { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid #1a1e2e; border-radius: 4px; overflow: hidden; width: fit-content; flex-wrap: wrap; }
 .mode-btn { padding: 8px 24px; background: #fff; color: #1a1e2e; border: none; cursor: pointer; font-size: 13px; transition: background 0.1s; border-right: 1px solid #1a1e2e; font-family: Arial, sans-serif; }
 .mode-btn:last-child { border-right: none; }
 .mode-btn.active { background: #1a1e2e; color: #fff; }
@@ -308,6 +308,81 @@ function solvePunching(bx, by, Bx, By, hF, cov, phiMM, rhoL_pct, VEd_kN, MEd_kNm
   };
 }
 
+/* ── Solver: footing plan sizing ────────────────────────────────────────── */
+function solveFootingPlan(NEd_kN, MEdY_kNm, sigmRd_kPa, bxC, byC, type) {
+  if (bxC <= 0 || byC <= 0) return { error: "Geometria do pilar inválida." };
+  if (NEd_kN <= 0) return { error: "N_Ed deve ser positivo." };
+  if (sigmRd_kPa <= 0) return { error: "Tensão de cálculo do terreno deve ser positiva." };
+
+  const Npp  = 0.1 * NEd_kN;
+  const Ntot = 1.1 * NEd_kN;
+  const M    = Math.abs(MEdY_kNm);
+  const B0   = Math.sqrt(Ntot / sigmRd_kPa);
+
+  /* Bisection: solve σ_Rd·Bx²·By = Ntot·Bx + 3·M  for the free parameter of each type */
+  const bisect = (f, lo, hi) => {
+    let fl = f(lo);
+    if (fl * f(hi) > 0) { hi *= 20; }
+    for (let i = 0; i < 120; i++) {
+      const mid = (lo + hi) / 2;
+      const fm  = f(mid);
+      if (Math.abs(fm) < 1e-8 || (hi - lo) < 1e-8) return mid;
+      if (fl * fm <= 0) hi = mid; else { lo = mid; fl = fm; }
+    }
+    return (lo + hi) / 2;
+  };
+
+  let Bx, By, paramLabel, paramVal;
+
+  if (type === "hom") {
+    /* Bx = r·bxC, By = r·byC  →  f(r) = σ_Rd·bxC²·byC·r³ − Ntot·bxC·r − 3M = 0 */
+    const r = bisect(r => sigmRd_kPa*bxC*bxC*byC*r*r*r - Ntot*bxC*r - 3*M, 1.001, 200);
+    Bx = r * bxC; By = r * byC;
+    paramLabel = "r  =  B_x / b_x  =  B_y / b_y"; paramVal = +r.toFixed(3);
+  } else {
+    /* Proporcionada face aos momentos: B₀ = √(Ntot/σ_Rd), Bx = B₀+2·ex, By = B₀ (ey=0) */
+    const ex_prop = M > 0 ? M / NEd_kN : 0;
+    Bx = B0 + 2 * ex_prop;
+    By = B0;
+    paramLabel = "B₀  =  √(N_tot / σ_Rd)"; paramVal = +B0.toFixed(3);
+  }
+
+  if (Bx <= bxC || By <= byC) return { error: "Dimensionamento inconsistente. Verifique N_Ed e σ_Rd." };
+
+  const A        = Bx * By;
+  const sigm_med = Ntot / A;
+  const delta_x  = 6 * M / (By * Bx * Bx);
+  const sigma1   = sigm_med + delta_x;          /* máx (face +x) */
+  const sigma2   = sigm_med - delta_x;          /* mín (face −x) */
+  const sigma_ref = (3 * sigma1 + sigma2) / 4;  /* = sigm_med + delta_x/2 */
+  const ex       = M > 0 ? M / NEd_kN : 0;
+  const kern_x   = sigm_med > 0 ? delta_x / sigm_med : 0;
+  const uplift   = sigma2 < 0;
+  const ok       = sigma_ref <= sigmRd_kPa;
+  const UC       = sigma_ref / sigmRd_kPa;
+
+  return {
+    Npp:       +Npp.toFixed(1),
+    Ntot:      +Ntot.toFixed(1),
+    A:         +A.toFixed(3),
+    B0:        +B0.toFixed(3),
+    ex:        +ex.toFixed(3),
+    Bx:        +Bx.toFixed(3),
+    By:        +By.toFixed(3),
+    a0x:       +((Bx - bxC) / 2).toFixed(3),
+    a0y:       +((By - byC) / 2).toFixed(3),
+    paramLabel, paramVal,
+    sigm_med:  +sigm_med.toFixed(2),
+    delta_x:   +delta_x.toFixed(2),
+    sigma1:    +sigma1.toFixed(2),
+    sigma2:    +sigma2.toFixed(2),
+    sigma_ref: +sigma_ref.toFixed(2),
+    kern_x:    +kern_x.toFixed(3),
+    UC:        +UC.toFixed(3),
+    ok, uplift,
+  };
+}
+
 /* ── Footing diagram (plan + elevation) ─────────────────────────────────── */
 function FootingDiagram({ bxCol, byCol, Bx, By, hFoot, result }) {
   const bxC = Math.max(+bxCol || 0.40, 0.05);
@@ -474,6 +549,126 @@ function FootingDiagram({ bxCol, byCol, Bx, By, hFoot, result }) {
       {dSE > 20 && (
         <text x={ecX - dSE*0.55} y={eoy + dSE*0.42} style={{...TR, fontSize:9}}>45°</text>
       )}
+    </svg>
+  );
+}
+
+/* ── Footing plan diagram (pressure distribution) ───────────────────────── */
+function FootingPlanDiagram({ bxCol, byCol, result }) {
+  const W = 300, H = 240;
+  if (!result || result.error) {
+    return (
+      <svg width={W} height={H} style={{ display:"block", margin:"0 auto" }}>
+        <text x={W/2} y={H/2} textAnchor="middle"
+          style={{fontSize:11, fontFamily:"Arial,sans-serif", fill:"#ccc"}}>—</text>
+      </svg>
+    );
+  }
+  const bxC = Math.max(+bxCol || 0.40, 0.05);
+  const byC = Math.max(+byCol || 0.40, 0.05);
+  const BxF = result.Bx;
+  const ByF = result.By;
+
+  const PAD = 44;
+  const sc  = Math.min((W - 2*PAD) / BxF, (H - 2*PAD) / ByF);
+  const fW  = BxF * sc, fH = ByF * sc;
+  const fox = (W - fW) / 2, foy = (H - fH) / 2;
+
+  const cW  = bxC * sc, cH = byC * sc;
+  const cxP = fox + (fW - cW) / 2;
+  const cyP = foy + (fH - cH) / 2;
+
+  /* Kern zone: Bx/3 × By/3 */
+  const kW  = (BxF / 3) * sc, kH = (ByF / 3) * sc;
+  const kxP = fox + (fW - kW) / 2;
+  const kyP = foy + (fH - kH) / 2;
+
+  const showGrad = result.delta_x > 0.01;
+  const showEcc  = result.ex > 0.001;
+  /* Clamp eccentricity marker so it stays inside footing */
+  const eccX = Math.min(fox + fW / 2 + result.ex * sc, fox + fW - 6);
+  const eccY = foy + fH / 2;
+
+  const T  = { fontSize: 10, fontFamily: "Arial, sans-serif", fill: "#333" };
+  const TG = { fontSize: 8,  fontFamily: "Arial, sans-serif", fill: "#888" };
+
+  return (
+    <svg width={W} height={H} style={{ display:"block", margin:"0 auto" }}>
+      <defs>
+        <pattern id="hatch45fp" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="8" stroke="#777" strokeWidth="1" opacity="0.55"/>
+        </pattern>
+        <clipPath id="fpPlanClip">
+          <rect x={fox} y={foy} width={fW} height={fH}/>
+        </clipPath>
+        {showGrad && (
+          <linearGradient id="fpPressGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stopColor="rgba(44,130,220,0.15)"/>
+            <stop offset="100%" stopColor="rgba(200,80,30,0.28)"/>
+          </linearGradient>
+        )}
+      </defs>
+
+      {/* Footing */}
+      <rect x={fox} y={foy} width={fW} height={fH} fill="#eceef2" stroke="#1a1e2e" strokeWidth={1.5}/>
+      {showGrad && (
+        <rect x={fox} y={foy} width={fW} height={fH}
+          fill="url(#fpPressGrad)" stroke="none" clipPath="url(#fpPlanClip)"/>
+      )}
+
+      {/* σ₂ left edge label, σ₁ right edge label — inside footing */}
+      <text x={fox+5} y={foy+fH/2+4}
+        style={{fontSize:8, fontFamily:"Arial,sans-serif", fill:"#2c5282", fontWeight:"bold"}}>
+        σ₂={result.sigma2.toFixed(0)}
+      </text>
+      <text x={fox+fW-5} y={foy+fH/2+4} textAnchor="end"
+        style={{fontSize:8, fontFamily:"Arial,sans-serif", fill:"#c0392b", fontWeight:"bold"}}>
+        σ₁={result.sigma1.toFixed(0)}
+      </text>
+
+      {/* Kern zone — thin dashed, label below kern if space allows */}
+      <rect x={kxP} y={kyP} width={kW} height={kH}
+        fill="none" stroke="#aaa" strokeWidth={0.8} strokeDasharray="3,3"/>
+      {(kyP + kH + 11 < foy + fH - 4) && (
+        <text x={kxP+kW/2} y={kyP+kH+10} textAnchor="middle" style={TG}>
+          núcleo central
+        </text>
+      )}
+
+      {/* Column (hatched) — drawn on top of kern so hatching is clear */}
+      <rect x={cxP} y={cyP} width={cW} height={cH}
+        fill="url(#hatch45fp)" stroke="#1a1e2e" strokeWidth={1.5}/>
+
+      {/* Eccentricity marker: grey dot at centroid, red dot at load point */}
+      {showEcc && (
+        <>
+          <circle cx={fox+fW/2} cy={eccY} r={2.5} fill="#aaa"/>
+          <line x1={fox+fW/2} y1={eccY} x2={eccX} y2={eccY}
+            stroke="#c0392b" strokeWidth={1} strokeDasharray="3,2" opacity={0.8}/>
+          <circle cx={eccX} cy={eccY} r={4} fill="#c0392b" opacity={0.85}/>
+          <text x={eccX} y={eccY-8} textAnchor="middle"
+            style={{fontSize:7.5, fontFamily:"Arial,sans-serif", fill:"#c0392b"}}>N_Ed</text>
+        </>
+      )}
+
+      {/* Bx dimension (top) */}
+      <line x1={fox} y1={foy-13} x2={fox+fW} y2={foy-13} stroke="#555" strokeWidth={0.8}/>
+      <line x1={fox} y1={foy-18} x2={fox} y2={foy-8} stroke="#555" strokeWidth={0.8}/>
+      <line x1={fox+fW} y1={foy-18} x2={fox+fW} y2={foy-8} stroke="#555" strokeWidth={0.8}/>
+      <polygon points={`${fox+5},${foy-13} ${fox+9},${foy-16} ${fox+9},${foy-10}`} fill="#555"/>
+      <polygon points={`${fox+fW-5},${foy-13} ${fox+fW-9},${foy-16} ${fox+fW-9},${foy-10}`} fill="#555"/>
+      <text x={fox+fW/2} y={foy-19} textAnchor="middle" style={T}>B_x = {BxF.toFixed(2)} m</text>
+
+      {/* By dimension (left) */}
+      <line x1={fox-16} y1={foy} x2={fox-16} y2={foy+fH} stroke="#555" strokeWidth={0.8}/>
+      <line x1={fox-21} y1={foy} x2={fox-11} y2={foy} stroke="#555" strokeWidth={0.8}/>
+      <line x1={fox-21} y1={foy+fH} x2={fox-11} y2={foy+fH} stroke="#555" strokeWidth={0.8}/>
+      <polygon points={`${fox-16},${foy+5} ${fox-19},${foy+9} ${fox-13},${foy+9}`} fill="#555"/>
+      <polygon points={`${fox-16},${foy+fH-5} ${fox-19},${foy+fH-9} ${fox-13},${foy+fH-9}`} fill="#555"/>
+      <text x={fox-28} y={foy+fH/2} textAnchor="middle"
+        transform={`rotate(-90,${fox-28},${foy+fH/2})`} style={T}>
+        B_y = {ByF.toFixed(2)} m
+      </text>
     </svg>
   );
 }
@@ -681,6 +876,14 @@ function App() {
   const [VEdFoot, setVEdFoot] = useState("600");
   const [MEdFoot, setMEdFoot] = useState("0");
 
+  /* Footing plan sizing state */
+  const [fp_NEd,     setFpNEd]     = useState("600");
+  const [fp_MEdY,    setFpMEdY]    = useState("0");
+  const [fp_sigmAdm, setFpSigmAdm] = useState("200");
+  const [fp_bxC,     setFpBxC]     = useState("0.40");
+  const [fp_byC,     setFpByC]     = useState("0.40");
+  const [fp_type,    setFpType]    = useState("hom");
+
   const fck = CONCRETE[+fckI].fck, fyk = STEEL[+fykI].fyk;
   const fcd = +(fck/1.5).toFixed(2), fyd = +(Math.min(fyk/1.15,600)).toFixed(2);
 
@@ -694,6 +897,11 @@ function App() {
   /* Punching result */
   const punchResult = mode === "punching"
     ? solvePunching(+bxCol,+byCol,+BxFoot,+ByFoot,+hFoot,+covFoot,+phiFoot,+rhoFoot,+VEdFoot,+MEdFoot,fck,fyk)
+    : null;
+
+  /* Footing plan result */
+  const fpResult = mode === "footplan"
+    ? solveFootingPlan(+fp_NEd, +fp_MEdY, +fp_sigmAdm, +fp_bxC, +fp_byC, fp_type)
     : null;
 
   /* Bending section props */
@@ -731,8 +939,11 @@ function App() {
         <button className={"mode-btn"+(mode==="composed"?" active":"")} onClick={()=>setMode("composed")}>
           Flexão Composta &nbsp;(M + N)
         </button>
+        <button className={"mode-btn"+(mode==="footplan"?" active":"")} onClick={()=>setMode("footplan")}>
+          Dim. em Planta &nbsp;(Sapata)
+        </button>
         <button className={"mode-btn"+(mode==="punching"?" active":"")} onClick={()=>setMode("punching")}>
-          Punçoamento &nbsp;(Sapata)
+          Dim. Armadura &nbsp;(Sapata)
         </button>
       </div>
 
@@ -954,8 +1165,171 @@ function App() {
         </div>
       )}
 
+      {/* ════════════ FOOTING PLAN MODE ════════════ */}
+      {mode === "footplan" && (
+        <div className="layout">
+          {/* Left: inputs */}
+          <div>
+            <div className="panel">
+              <div className="panel-title">Acções sobre a sapata</div>
+              <Num label="Carga do pilar  N_Ed" value={fp_NEd} onChange={setFpNEd} unit="kN" step="10"
+                note="Força axial de cálculo na base do pilar"/>
+              <Num label="Momento  M_Ed,y  (em torno de y)" value={fp_MEdY} onChange={setFpMEdY} unit="kN·m" step="1"
+                note="Causa excentricidade na direcção x"/>
+            </div>
+
+            <div className="panel">
+              <div className="panel-title">Solo</div>
+              <Num label="Pressão de cálculo  σ_Rd" value={fp_sigmAdm} onChange={setFpSigmAdm} unit="kPa" step="10"
+                note="Tensão de contacto resistente de cálculo"/>
+              {fpResult && !fpResult.error && (
+                <div className="field-note" style={{marginTop:6, color:"#2c5282"}}>
+                  Dimensão de referência: B₀ = {fpResult.B0.toFixed(2)} m &nbsp;[= √(N_tot / σ_Rd)]
+                </div>
+              )}
+            </div>
+
+            <div className="panel">
+              <div className="panel-title">Geometria do pilar</div>
+              <Num label="Dimensão  b_x  (direcção x)" value={fp_bxC} onChange={setFpBxC} unit="m" step="0.05"/>
+              <Num label="Dimensão  b_y  (direcção y)" value={fp_byC} onChange={setFpByC} unit="m" step="0.05"/>
+            </div>
+
+            <div className="panel">
+              <div className="panel-title">Tipo de sapata</div>
+              <div style={{display:"flex", gap:6, flexWrap:"wrap", marginTop:4}}>
+                {[
+                  {val:"hom",  label:"Homotética",               note:"B_x/b_x = B_y/b_y"},
+                  {val:"prop", label:"Proporcionada (momentos)", note:"B_x = B₀ + 2e_x, B_y = B₀"},
+                ].map(({val, label, note}) => (
+                  <button key={val}
+                    onClick={() => setFpType(val)}
+                    style={{
+                      padding:"6px 10px", borderRadius:6, border:"1px solid #cbd5e0",
+                      background: fp_type===val ? "#2b6cb0" : "#f7fafc",
+                      color: fp_type===val ? "#fff" : "#2d3748",
+                      cursor:"pointer", fontSize:13, lineHeight:1.3, textAlign:"left"
+                    }}>
+                    <div style={{fontWeight:600}}>{label}</div>
+                    <div style={{fontSize:11, opacity:0.85}}>{note}</div>
+                  </button>
+                ))}
+              </div>
+              <div className="field-note" style={{marginTop:8}}>
+                Peso próprio estimado: N_pp = 0.1 × N_Ed &nbsp;·&nbsp; N_tot = 1.1 × N_Ed
+              </div>
+            </div>
+          </div>
+
+          {/* Right: diagram + results */}
+          <div>
+            <div className="diagram-panel">
+              <div className="panel-title">Vista superior — Distribuição de pressões</div>
+              <FootingPlanDiagram bxCol={fp_bxC} byCol={fp_byC} result={fpResult}/>
+              <div className="diagram-caption">
+                Vista em planta &nbsp;·&nbsp; Tracejado = núcleo central &nbsp;·&nbsp;
+                Gradiente: σ₂ (esquerda, azul) → σ₁ (direita, laranja) &nbsp;·&nbsp; Valores em kPa
+              </div>
+            </div>
+
+            <div className="results-panel">
+              <div className="panel-title">Dimensionamento em planta</div>
+
+              {fpResult && fpResult.error ? (
+                <div className="error-box">⚠  {fpResult.error}</div>
+              ) : fpResult ? (<>
+                {fpResult.uplift && (
+                  <div className="warn-box">⚠ σ₂ &lt; 0 — excentricidade fora do núcleo central. Rever esforços ou aumentar dimensões.</div>
+                )}
+
+                <div className="section-label">Peso próprio e carga total</div>
+                <Row name="N_pp = 0.1 × N_Ed"
+                  sub={`= 0.1 × ${(+fp_NEd).toFixed(0)}`}
+                  value={fpResult.Npp.toFixed(1)} unit="kN"/>
+                <Row name="N_tot = 1.1 × N_Ed"
+                  sub={`= ${(+fp_NEd).toFixed(0)} + ${fpResult.Npp.toFixed(1)}`}
+                  value={fpResult.Ntot.toFixed(1)} unit="kN"/>
+                {fp_type !== "prop" && (
+                  <Row name="B₀ = √(N_tot / σ_Rd)  (referência)"
+                    sub={`= √(${fpResult.Ntot.toFixed(1)} / ${(+fp_sigmAdm).toFixed(0)})`}
+                    value={fpResult.B0.toFixed(2)} unit="m"/>
+                )}
+
+                <div className="section-label">Dimensões calculadas</div>
+                {fp_type !== "prop" && (
+                  <Row name={fpResult.paramLabel}
+                    value={fpResult.paramVal} unit="m" hl/>
+                )}
+                {fp_type === "prop" && (<>
+                  <Row name="B₀  =  √(N_tot / σ_Rd)"
+                    sub={`= √(${fpResult.Ntot.toFixed(1)} / ${(+fp_sigmAdm).toFixed(0)})`}
+                    value={fpResult.B0.toFixed(3)} unit="m" hl/>
+                  <Row name="e_x = |M_Ed,y| / N_Ed"
+                    sub={`= ${Math.abs(+fp_MEdY).toFixed(1)} / ${(+fp_NEd).toFixed(0)}`}
+                    value={fpResult.ex.toFixed(3)} unit="m"/>
+                  <Row name="B_x = B₀ + 2·e_x"
+                    sub={`= ${fpResult.B0.toFixed(3)} + 2 × ${fpResult.ex.toFixed(3)}`}
+                    value={fpResult.Bx.toFixed(3)} unit="m" hl/>
+                  <Row name="B_y = B₀  (e_y = 0)"
+                    value={fpResult.By.toFixed(3)} unit="m" hl/>
+                </>)}
+                {fp_type !== "prop" && (
+                  <>
+                    <Row name="B_x  (direcção x)"
+                      value={fpResult.Bx.toFixed(2)} unit="m" hl/>
+                    <Row name="B_y  (direcção y)"
+                      value={fpResult.By.toFixed(2)} unit="m" hl/>
+                    {Math.abs(+fp_MEdY) > 0 && (
+                      <Row name="e_x = |M_Ed,y| / N_Ed"
+                        sub={`= ${Math.abs(+fp_MEdY).toFixed(1)} / ${(+fp_NEd).toFixed(0)}`}
+                        value={fpResult.ex.toFixed(3)} unit="m"/>
+                    )}
+                  </>
+                )}
+                <Row name="A = B_x · B_y"
+                  value={fpResult.A.toFixed(3)} unit="m²"/>
+
+                <div className="section-label">Distribuição de pressões</div>
+                <Row name="σ_méd = N_tot / A"
+                  sub={`= ${fpResult.Ntot.toFixed(1)} / ${fpResult.A.toFixed(3)}`}
+                  value={fpResult.sigm_med.toFixed(2)} unit="kPa"/>
+                {Math.abs(+fp_MEdY) > 0 && (
+                  <Row name="Δσ_x = 6 · |M_Ed,y| / (B_y · B_x²)"
+                    sub={`= 6 × ${Math.abs(+fp_MEdY).toFixed(1)} / (${fpResult.By.toFixed(2)} × ${fpResult.Bx.toFixed(2)}²)`}
+                    value={fpResult.delta_x.toFixed(2)} unit="kPa"/>
+                )}
+                <Row name="σ₁ = σ_méd + Δσ_x  (bordo mais carregado)"
+                  value={fpResult.sigma1.toFixed(2)} unit="kPa"/>
+                <Row name="σ₂ = σ_méd − Δσ_x  (bordo menos carregado)"
+                  value={fpResult.sigma2.toFixed(2)} unit="kPa"
+                  err={fpResult.uplift}/>
+
+                <div className="section-label">Verificação da capacidade de carga</div>
+                <Row name="σ_ref = (3·σ₁ + σ₂) / 4"
+                  sub={`= (3×${fpResult.sigma1.toFixed(2)} + ${fpResult.sigma2.toFixed(2)}) / 4`}
+                  value={fpResult.sigma_ref.toFixed(2)} unit="kPa" hl/>
+                <Row name="σ_Rd"
+                  value={(+fp_sigmAdm).toFixed(0)} unit="kPa"/>
+                <Row
+                  name={fpResult.ok ? "✓  σ_ref ≤ σ_Rd — VERIFICA" : "✗  σ_ref > σ_Rd — NÃO VERIFICA"}
+                  sub={`UC = σ_ref / σ_Rd = ${fpResult.UC.toFixed(3)}`}
+                  value={`${(fpResult.UC*100).toFixed(1)} %`}
+                  ok={fpResult.ok} err={!fpResult.ok}/>
+
+                <div className="ec2-note">
+                  σ_ref = (3σ₁+σ₂)/4 = σ_méd + Δσ_x/2 &nbsp;·&nbsp;
+                  {fp_type === "prop"
+                    ? "Sapata proporcionada: dimensões directas; verificação posterior σ_ref ≤ σ_Rd"
+                    : "Condição de projecto: σ_ref = σ_Rd → σ_Rd·B_x²·B_y = N_tot·B_x + 3|M_Ed,y|"}
+                </div>
+              </>) : null}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ════════════ BENDING MODES ════════════ */}
-      {mode !== "punching" && (
+      {(mode === "simple" || mode === "composed") && (
         <div className="layout">
           {/* Left column */}
           <div>
