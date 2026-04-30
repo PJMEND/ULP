@@ -309,7 +309,7 @@ function solvePunching(bx, by, Bx, By, hF, cov, phiMM, rhoL_pct, VEd_kN, MEd_kNm
 }
 
 /* ── Solver: footing plan sizing ────────────────────────────────────────── */
-function solveFootingPlan(NEd_kN, MEdY_kNm, sigmRd_kPa, bxC, byC, type) {
+function solveFootingPlan(NEd_kN, MEdY_kNm, sigmRd_kPa, bxC, byC, type, manual, userBx, userBy) {
   if (bxC <= 0 || byC <= 0) return { error: "Geometria do pilar inválida." };
   if (NEd_kN <= 0) return { error: "N_Ed deve ser positivo." };
   if (sigmRd_kPa <= 0) return { error: "Tensão de cálculo do terreno deve ser positiva." };
@@ -334,16 +334,34 @@ function solveFootingPlan(NEd_kN, MEdY_kNm, sigmRd_kPa, bxC, byC, type) {
 
   let Bx, By, paramLabel, paramVal;
 
-  if (type === "hom") {
+  if (manual) {
+    /* Dimensões inseridas pelo utilizador — verificação apenas */
+    Bx = userBx; By = userBy;
+    if (!(Bx > 0 && By > 0)) return { error: "Dimensões da sapata devem ser positivas." };
+    paramLabel = null; paramVal = null;
+  } else if (type === "hom") {
     /* Bx = r·bxC, By = r·byC  →  f(r) = σ_Rd·bxC²·byC·r³ − Ntot·bxC·r − 3M = 0 */
     const r = bisect(r => sigmRd_kPa*bxC*bxC*byC*r*r*r - Ntot*bxC*r - 3*M, 1.001, 200);
     Bx = r * bxC; By = r * byC;
     paramLabel = "r  =  B_x / b_x  =  B_y / b_y"; paramVal = +r.toFixed(3);
+  } else if (type === "quad") {
+    /* Sapata quadrada: Bx = By = B, M = 0  →  σ_Rd·B² = N_tot */
+    if (M > 1e-9) return { error: "Sapata quadrada requer M_Ed,y = 0." };
+    const B = Math.sqrt(Ntot / sigmRd_kPa);
+    Bx = B; By = B;
+    paramLabel = "B  =  B_x  =  B_y  =  √(N_tot / σ_Rd)"; paramVal = +B.toFixed(3);
   } else {
-    /* Proporcionada face aos momentos: B₀ = √(Ntot/σ_Rd), Bx = B₀+2·ex, By = B₀ (ey=0) */
-    const ex_prop = M > 0 ? M / NEd_kN : 0;
-    Bx = B0 + 2 * ex_prop;
-    By = B0;
+    /* Proporcionada face aos momentos: Bx = By + 2·ex
+       Bisecção: σ_Rd·By·(By+2ex)² = N_tot·(By+2ex) + 3M */
+    if (M < 1e-9) {
+      Bx = B0; By = B0;
+    } else {
+      const ex_prop = M / NEd_kN;
+      const t2e = t => t + 2 * ex_prop;
+      const By_sol = bisect(t => sigmRd_kPa * t * t2e(t) * t2e(t) - Ntot * t2e(t) - 3 * M, 0.001, 500);
+      By = By_sol;
+      Bx = By + 2 * ex_prop;
+    }
     paramLabel = "B₀  =  √(N_tot / σ_Rd)"; paramVal = +B0.toFixed(3);
   }
 
@@ -883,6 +901,13 @@ function App() {
   const [fp_bxC,     setFpBxC]     = useState("0.40");
   const [fp_byC,     setFpByC]     = useState("0.40");
   const [fp_type,    setFpType]    = useState("hom");
+  const [fp_manual,  setFpManual]  = useState(false);
+  const [fp_userBx,  setFpUserBx]  = useState("1.60");
+  const [fp_userBy,  setFpUserBy]  = useState("1.60");
+
+  React.useEffect(() => {
+    if (Math.abs(+fp_MEdY) > 1e-9 && fp_type === "quad") setFpType("hom");
+  }, [fp_MEdY]);
 
   const fck = CONCRETE[+fckI].fck, fyk = STEEL[+fykI].fyk;
   const fcd = +(fck/1.5).toFixed(2), fyd = +(Math.min(fyk/1.15,600)).toFixed(2);
@@ -901,7 +926,7 @@ function App() {
 
   /* Footing plan result */
   const fpResult = mode === "footplan"
-    ? solveFootingPlan(+fp_NEd, +fp_MEdY, +fp_sigmAdm, +fp_bxC, +fp_byC, fp_type)
+    ? solveFootingPlan(+fp_NEd, +fp_MEdY, +fp_sigmAdm, +fp_bxC, +fp_byC, fp_type, fp_manual, +fp_userBx, +fp_userBy)
     : null;
 
   /* Bending section props */
@@ -1200,7 +1225,8 @@ function App() {
               <div style={{display:"flex", gap:6, flexWrap:"wrap", marginTop:4}}>
                 {[
                   {val:"hom",  label:"Homotética",               note:"B_x/b_x = B_y/b_y"},
-                  {val:"prop", label:"Proporcionada (momentos)", note:"B_x = B₀ + 2e_x, B_y = B₀"},
+                  {val:"prop", label:"Proporcionada (momentos)",  note:"B_x = B_y + 2e_x"},
+                  ...(Math.abs(+fp_MEdY) < 1e-9 ? [{val:"quad", label:"Quadrada", note:"B_x = B_y"}] : []),
                 ].map(({val, label, note}) => (
                   <button key={val}
                     onClick={() => setFpType(val)}
@@ -1214,6 +1240,29 @@ function App() {
                     <div style={{fontSize:11, opacity:0.85}}>{note}</div>
                   </button>
                 ))}
+              </div>
+              <div style={{borderTop:"1px solid #e2e8f0", marginTop:10, paddingTop:10}}>
+                <button
+                  onClick={() => setFpManual(v => !v)}
+                  style={{
+                    display:"inline-flex", alignItems:"center", gap:6,
+                    padding:"5px 12px", borderRadius:20,
+                    border: fp_manual ? "1px solid #2b6cb0" : "1px solid #cbd5e0",
+                    background: fp_manual ? "#2b6cb0" : "#fff",
+                    color: fp_manual ? "#fff" : "#4a5568",
+                    cursor:"pointer", fontSize:12, fontWeight:600
+                  }}>
+                  <span style={{fontSize:14, lineHeight:1}}>{fp_manual ? "✕" : "+"}</span>
+                  {fp_manual ? "B_x e B_y inseridos" : "Inserir B_x e B_y"}
+                </button>
+                {fp_manual && (
+                  <div style={{marginTop:8}}>
+                    <Num label="B_x  (direcção x)" value={fp_userBx} onChange={setFpUserBx} unit="m" step="0.05"
+                      note="Deve ser maior que b_x do pilar"/>
+                    <Num label="B_y  (direcção y)" value={fp_userBy} onChange={setFpUserBy} unit="m" step="0.05"
+                      note="Deve ser maior que b_y do pilar"/>
+                  </div>
+                )}
               </div>
               <div className="field-note" style={{marginTop:8}}>
                 Peso próprio estimado: N_pp = 0.1 × N_Ed &nbsp;·&nbsp; N_tot = 1.1 × N_Ed
@@ -1249,43 +1298,58 @@ function App() {
                 <Row name="N_tot = 1.1 × N_Ed"
                   sub={`= ${(+fp_NEd).toFixed(0)} + ${fpResult.Npp.toFixed(1)}`}
                   value={fpResult.Ntot.toFixed(1)} unit="kN"/>
-                {fp_type !== "prop" && (
+                {!fp_manual && (fp_type === "hom" || fp_type === "quad") && (
                   <Row name="B₀ = √(N_tot / σ_Rd)  (referência)"
                     sub={`= √(${fpResult.Ntot.toFixed(1)} / ${(+fp_sigmAdm).toFixed(0)})`}
                     value={fpResult.B0.toFixed(2)} unit="m"/>
                 )}
 
-                <div className="section-label">Dimensões calculadas</div>
-                {fp_type !== "prop" && (
-                  <Row name={fpResult.paramLabel}
-                    value={fpResult.paramVal} unit="m" hl/>
-                )}
-                {fp_type === "prop" && (<>
-                  <Row name="B₀  =  √(N_tot / σ_Rd)"
-                    sub={`= √(${fpResult.Ntot.toFixed(1)} / ${(+fp_sigmAdm).toFixed(0)})`}
-                    value={fpResult.B0.toFixed(3)} unit="m" hl/>
-                  <Row name="e_x = |M_Ed,y| / N_Ed"
-                    sub={`= ${Math.abs(+fp_MEdY).toFixed(1)} / ${(+fp_NEd).toFixed(0)}`}
-                    value={fpResult.ex.toFixed(3)} unit="m"/>
-                  <Row name="B_x = B₀ + 2·e_x"
-                    sub={`= ${fpResult.B0.toFixed(3)} + 2 × ${fpResult.ex.toFixed(3)}`}
+                <div className="section-label">{fp_manual ? "Dimensões inseridas" : "Dimensões calculadas"}</div>
+                {fp_manual ? (<>
+                  <Row name="B_x  (inserida pelo utilizador)"
                     value={fpResult.Bx.toFixed(3)} unit="m" hl/>
-                  <Row name="B_y = B₀  (e_y = 0)"
+                  <Row name="B_y  (inserida pelo utilizador)"
                     value={fpResult.By.toFixed(3)} unit="m" hl/>
-                </>)}
-                {fp_type !== "prop" && (
-                  <>
+                  {Math.abs(+fp_MEdY) > 0 && (
+                    <Row name="e_x = |M_Ed,y| / N_Ed"
+                      sub={`= ${Math.abs(+fp_MEdY).toFixed(1)} / ${(+fp_NEd).toFixed(0)}`}
+                      value={fpResult.ex.toFixed(3)} unit="m"/>
+                  )}
+                </>) : (<>
+                  {fp_type === "hom" && (<>
+                    <Row name={fpResult.paramLabel}
+                      value={fpResult.paramVal} unit="" hl/>
                     <Row name="B_x  (direcção x)"
-                      value={fpResult.Bx.toFixed(2)} unit="m" hl/>
+                      value={fpResult.Bx.toFixed(3)} unit="m" hl/>
                     <Row name="B_y  (direcção y)"
-                      value={fpResult.By.toFixed(2)} unit="m" hl/>
+                      value={fpResult.By.toFixed(3)} unit="m" hl/>
                     {Math.abs(+fp_MEdY) > 0 && (
                       <Row name="e_x = |M_Ed,y| / N_Ed"
                         sub={`= ${Math.abs(+fp_MEdY).toFixed(1)} / ${(+fp_NEd).toFixed(0)}`}
                         value={fpResult.ex.toFixed(3)} unit="m"/>
                     )}
-                  </>
-                )}
+                  </>)}
+                  {fp_type === "quad" && (
+                    <Row name="B  =  B_x  =  B_y  =  √(N_tot / σ_Rd)"
+                      sub={`= √(${fpResult.Ntot.toFixed(1)} / ${(+fp_sigmAdm).toFixed(0)})`}
+                      value={fpResult.B0.toFixed(3)} unit="m" hl/>
+                  )}
+                  {fp_type === "prop" && (<>
+                    <Row name="B₀  =  √(N_tot / σ_Rd)  (referência)"
+                      sub={`= √(${fpResult.Ntot.toFixed(1)} / ${(+fp_sigmAdm).toFixed(0)})`}
+                      value={fpResult.B0.toFixed(3)} unit="m"/>
+                    {Math.abs(+fp_MEdY) > 0 && (
+                      <Row name="e_x = |M_Ed,y| / N_Ed"
+                        sub={`= ${Math.abs(+fp_MEdY).toFixed(1)} / ${(+fp_NEd).toFixed(0)}`}
+                        value={fpResult.ex.toFixed(3)} unit="m"/>
+                    )}
+                    <Row name="B_x = B_y + 2·e_x"
+                      sub={`= ${fpResult.By.toFixed(3)} + 2 × ${fpResult.ex.toFixed(3)}`}
+                      value={fpResult.Bx.toFixed(3)} unit="m" hl/>
+                    <Row name="B_y  (direcção y)"
+                      value={fpResult.By.toFixed(3)} unit="m" hl/>
+                  </>)}
+                </>)}
                 <Row name="A = B_x · B_y"
                   value={fpResult.A.toFixed(3)} unit="m²"/>
 
@@ -1318,8 +1382,16 @@ function App() {
 
                 <div className="ec2-note">
                   σ_ref = (3σ₁+σ₂)/4 = σ_méd + Δσ_x/2 &nbsp;·&nbsp;
-                  {fp_type === "prop"
-                    ? "Sapata proporcionada: dimensões directas; verificação posterior σ_ref ≤ σ_Rd"
+                  {fp_manual
+                    ? (fp_type === "prop"
+                      ? "Verificação com dimensões inseridas — tipo proporcionada (B_x = B_y + 2e_x)"
+                      : fp_type === "quad"
+                      ? "Verificação com dimensões inseridas — tipo quadrada (B_x = B_y)"
+                      : "Verificação com dimensões inseridas — tipo homotética (B_x/b_x = B_y/b_y)")
+                    : fp_type === "quad"
+                    ? "Sapata quadrada (M=0): B = √(N_tot / σ_Rd)"
+                    : fp_type === "prop"
+                    ? "Sapata proporcionada: σ_Rd·B_y·(B_y+2e_x)² = N_tot·(B_y+2e_x) + 3|M_Ed,y|"
                     : "Condição de projecto: σ_ref = σ_Rd → σ_Rd·B_x²·B_y = N_tot·B_x + 3|M_Ed,y|"}
                 </div>
               </>) : null}
