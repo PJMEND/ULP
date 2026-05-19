@@ -108,6 +108,15 @@ h1 { font-size: 20px; font-weight: normal; color: #1a1e2e; }
 .sigma-toggle button.active { background: #1a1e2e; color: #fff; }
 
 .page-footer { margin-top: 28px; font-size: 11px; color: #aaa; font-family: Arial, sans-serif; text-align: center; }
+
+.slab-case-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+.slab-case-btn  { border: 1px solid #bbbec6; border-radius: 4px; padding: 6px 4px 4px; cursor: pointer;
+                  background: #fff; text-align: center; transition: background 0.1s; }
+.slab-case-btn:hover { border-color: #1a1e2e; }
+.slab-case-btn.active { background: #1a1e2e; color: #fff; border-color: #1a1e2e; }
+.slab-case-num  { font-size: 10px; font-family: Arial, sans-serif; margin-bottom: 3px; }
+.result-row.pos-row { background: #fff5f0; margin: 0 -18px; padding: 8px 18px; border-bottom: 1px solid #fbb; }
+.result-val.pos { font-size: 16px; font-weight: bold; color: #c53030; }
 </style>
 </head>
 <body>
@@ -126,6 +135,74 @@ const STEEL = [
   {l:"A400 NR  (fyk = 400 MPa)", fyk:400},
   {l:"A500 NR  (fyk = 500 MPa)", fyk:500},
   {l:"A600 NR  (fyk = 600 MPa)", fyk:600},
+];
+
+/* ── BS Two-Way Slab Tables (Reg. Britânico) ───────────────────────────── */
+const BS_RATIOS = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.75, 2.0];
+
+const BS_BSX_NEG = [
+  [0.032,0.037,0.043,0.047,0.051,0.053,0.060,0.065], // 1
+  [0.037,0.043,0.048,0.051,0.055,0.057,0.064,0.068], // 2
+  [0.037,0.044,0.052,0.057,0.063,0.067,0.077,0.085], // 3
+  [0.047,0.053,0.060,0.065,0.071,0.075,0.084,0.091], // 4
+  [0.045,0.049,0.052,0.056,0.059,0.060,0.065,0.069], // 5
+  null,                                                // 6: sem apoios x cont.
+  [0.057,0.064,0.071,0.076,0.080,0.084,0.091,0.097], // 7
+  null,                                                // 8: sem apoios x cont.
+  null,                                                // 9: todos desc.
+];
+const BS_BSX_POS = [
+  [0.024,0.028,0.032,0.036,0.039,0.041,0.045,0.049], // 1
+  [0.028,0.032,0.036,0.039,0.041,0.044,0.048,0.052], // 2
+  [0.028,0.033,0.039,0.044,0.047,0.051,0.059,0.065], // 3
+  [0.035,0.040,0.045,0.049,0.053,0.056,0.063,0.069], // 4
+  [0.035,0.037,0.040,0.043,0.044,0.045,0.049,0.052], // 5
+  [0.035,0.043,0.051,0.057,0.063,0.068,0.080,0.088], // 6
+  [0.043,0.048,0.053,0.057,0.060,0.064,0.069,0.073], // 7
+  [0.043,0.051,0.059,0.065,0.071,0.076,0.087,0.096], // 8
+  [0.056,0.064,0.072,0.079,0.085,0.089,0.100,0.107], // 9
+];
+// [βsy_neg, βsy_pos] — constante para todos os valores de ly/lx
+const BS_BSY = [
+  [0.032,0.024],[0.037,0.028],[0.037,0.028],[0.047,0.035],
+  [null, 0.035],[0.045,0.035],[null, 0.043],[0.057,0.043],[null,0.056],
+];
+// Quadro 2 — Reacções: xCont/xDisc = arrays[8] ou null; yCont/yDisc = escalar ou null
+const BS_BVX = [
+  {xCont:[0.33,0.36,0.39,0.41,0.43,0.45,0.48,0.50],xDisc:null,yCont:0.33,yDisc:null},
+  {xCont:[0.36,0.39,0.42,0.44,0.45,0.47,0.50,0.52],xDisc:null,yCont:0.36,yDisc:0.24},
+  {xCont:[0.36,0.40,0.44,0.47,0.49,0.51,0.55,0.59],xDisc:[0.24,0.27,0.29,0.31,0.32,0.34,0.36,0.38],yCont:0.36,yDisc:null},
+  {xCont:[0.40,0.44,0.47,0.50,0.52,0.54,0.57,0.60],xDisc:[0.26,0.29,0.31,0.33,0.34,0.35,0.38,0.40],yCont:0.40,yDisc:0.26},
+  {xCont:[0.40,0.43,0.45,0.47,0.48,0.49,0.52,0.54],xDisc:null,yCont:null,yDisc:0.26},
+  {xCont:null,xDisc:[0.26,0.30,0.33,0.36,0.38,0.40,0.44,0.47],yCont:0.40,yDisc:null},
+  {xCont:[0.45,0.48,0.51,0.53,0.55,0.57,0.60,0.63],xDisc:[0.30,0.32,0.34,0.35,0.36,0.37,0.39,0.41],yCont:null,yDisc:0.29},
+  {xCont:null,xDisc:[0.29,0.33,0.36,0.38,0.40,0.42,0.45,0.48],yCont:0.45,yDisc:0.30},
+  {xCont:null,xDisc:[0.33,0.36,0.39,0.41,0.43,0.45,0.48,0.50],yCont:null,yDisc:0.33},
+];
+// [leftCont, rightCont, bottomCont, topCont]
+// left/right = lados maiores (verticais, comprimento ly) — apoios x
+// bottom/top = lados menores (horizontais, comprimento lx) — apoios y
+const CASE_EDGES = [
+  [true, true, true, true ], // 1
+  [true, true, true, false], // 2
+  [true, false,true, true ], // 3
+  [true, false,true, false], // 4
+  [true, true, false,false], // 5
+  [false,false,true, true ], // 6
+  [true, false,false,false], // 7
+  [false,false,true, false], // 8
+  [false,false,false,false], // 9
+];
+const CASE_LABELS = [
+  "Quatro lados contínuos",
+  "Um lado menor descontínuo",
+  "Um lado maior descontínuo",
+  "Dois lados adjacentes descontínuos",
+  "Dois lados menores descontínuos",
+  "Dois lados maiores descontínuos",
+  "Três lados desc. — um lado maior contínuo",
+  "Três lados desc. — um lado menor contínuo",
+  "Quatro lados descontínuos",
 ];
 
 /* ── EC2 helpers ────────────────────────────────────────────────────────── */
@@ -398,6 +475,111 @@ function solveFootingPlan(NEd_kN, MEdY_kNm, sigmRd_kPa, bxC, byC, type, manual, 
     kern_x:    +kern_x.toFixed(3),
     UC:        +UC.toFixed(3),
     ok, uplift,
+  };
+}
+
+/* ── Solver: BS two-way slab ─────────────────────────────────────────────── */
+function solveSlab(caso, lx_m, ly_m, Sd) {
+  const c = caso - 1;
+  if (lx_m <= 0 || ly_m <= 0 || Sd <= 0)
+    return { error: "Geometria ou carga inválida." };
+  if (ly_m < lx_m - 1e-9)
+    return { error: "lx deve ser o vão menor (lx ≤ ly). Troque os valores de lx e ly." };
+  const ratio = ly_m / lx_m;
+  const warn2 = ratio > 2.0
+    ? "ly/lx > 2.0: a laje actua essencialmente como laje em faixa (1 direcção). Coeficientes de ly/lx = 2.0 aplicados."
+    : null;
+  const r = Math.min(ratio, 2.0);
+  const R = BS_RATIOS;
+  let i = 0;
+  while (i < R.length - 2 && R[i + 1] < r) i++;
+  const t = i >= R.length - 2 ? 1.0 : r <= R[i] ? 0 : (r - R[i]) / (R[i+1] - R[i]);
+  const lerp = arr => {
+    if (!arr) return null;
+    const a = arr[i], b = arr[Math.min(i+1, R.length-1)];
+    if (a === null || a === undefined) return null;
+    return a + t * (b - a);
+  };
+  const bNeg = BS_BSX_NEG[c];
+  const betaSx_neg = bNeg ? lerp(bNeg) : null;
+  const betaSx_pos = lerp(BS_BSX_POS[c]);
+  const [bsy_neg, bsy_pos] = BS_BSY[c];
+  const lx2 = lx_m * lx_m;
+  const Msx_neg = betaSx_neg !== null ? betaSx_neg * Sd * lx2 : null;
+  const Msx_pos = betaSx_pos * Sd * lx2;
+  const Msy_neg = bsy_neg !== null ? bsy_neg * Sd * lx2 : null;
+  const Msy_pos = bsy_pos * Sd * lx2;
+  const bvx = BS_BVX[c];
+  const betaVxCont = bvx.xCont ? lerp(bvx.xCont) : null;
+  const betaVxDisc = bvx.xDisc ? lerp(bvx.xDisc) : null;
+  const betaVyCont = bvx.yCont ?? null;
+  const betaVyDisc = bvx.yDisc ?? null;
+  const vsx_cont = betaVxCont !== null ? betaVxCont * Sd * lx_m : null;
+  const vsx_disc = betaVxDisc !== null ? betaVxDisc * Sd * lx_m : null;
+  const vsy_cont = betaVyCont !== null ? betaVyCont * Sd * lx_m : null;
+  const vsy_disc = betaVyDisc !== null ? betaVyDisc * Sd * lx_m : null;
+  return {
+    ratio, r, warn2,
+    betaSx_neg, betaSx_pos, bsy_neg, bsy_pos,
+    Msx_neg, Msx_pos, Msy_neg, Msy_pos,
+    betaVxCont, betaVxDisc, betaVyCont, betaVyDisc,
+    vsx_cont, vsx_disc, vsy_cont, vsy_disc,
+  };
+}
+
+/* ── Solver: dois painéis — redistribuição por rigidez ──────────────────── */
+function solveSlabPair(cA, lxA, lyA, SdA, cB, lxB, lyB, SdB, edge) {
+  const resA = solveSlab(cA, lxA, lyA, SdA);
+  const resB = solveSlab(cB, lxB, lyB, SdB);
+  if (resA.error) return { error: "Painel A: " + resA.error };
+  if (resB.error) return { error: "Painel B: " + resB.error };
+  const [lCA, rCA, bCA, tCA] = CASE_EDGES[cA - 1];
+  const [lCB, rCB, bCB, tCB] = CASE_EDGES[cB - 1];
+  // α = 4 se extremo distante contínuo (encastrado), 3 se descontínuo (articulado)
+  let KA_factor, KB_factor, KA, KB, MA_neg, MB_neg;
+  if (edge === "x") {
+    // Bordo partilhado = vertical (lado maior); A direita ↔ B esquerda
+    // Extremo distante de A no eixo x = bordo esquerdo de A
+    // Extremo distante de B no eixo x = bordo direito de B
+    KA_factor = lCA ? 4 : 3;
+    KB_factor = rCB ? 4 : 3;
+    KA = KA_factor / lxA;
+    KB = KB_factor / lxB;
+    MA_neg = rCA ? (resA.Msx_neg ?? 0) : 0;
+    MB_neg = lCB ? (resB.Msx_neg ?? 0) : 0;
+  } else {
+    // Bordo partilhado = horizontal (lado menor); A topo ↔ B base
+    // Extremo distante de A no eixo y = bordo inferior de A
+    // Extremo distante de B no eixo y = bordo superior de B
+    KA_factor = bCA ? 4 : 3;
+    KB_factor = tCB ? 4 : 3;
+    KA = KA_factor / lyA;
+    KB = KB_factor / lyB;
+    MA_neg = tCA ? (resA.Msy_neg ?? 0) : 0;
+    MB_neg = bCB ? (resB.Msy_neg ?? 0) : 0;
+  }
+  const dfA = KA / (KA + KB);
+  const dfB = KB / (KA + KB);
+  // Distribuição correcta por Hardy Cross:
+  // θ = (MA⁻ − MB⁻)/(KA+KB)  →  M_edge = MA⁻ − KA·θ = dfB·MA⁻ + dfA·MB⁻
+  const deltaM = MA_neg - MB_neg;   // diferença de momentos (sinal)
+  const M_edge = MA_neg - dfA * deltaM;  // = dfB·MA⁻ + dfA·MB⁻
+  // Midspan: invariante M⁺_adj + M_edge = M⁺_BS + M⁻_BS_shared
+  const Mpos_A_pre = edge === "x" ? resA.Msx_pos : resA.Msy_pos;
+  const Mpos_B_pre = edge === "x" ? resB.Msx_pos : resB.Msy_pos;
+  const Mpos_A_adj = Mpos_A_pre + (MA_neg - M_edge);   // = Mpos_A_pre + dfA·ΔM
+  const Mpos_B_adj = Mpos_B_pre + (MB_neg - M_edge);   // = Mpos_B_pre − dfB·ΔM
+  const sumA = Mpos_A_pre + MA_neg;  // = Mpos_A_adj + M_edge (invariante)
+  const sumB = Mpos_B_pre + MB_neg;  // = Mpos_B_adj + M_edge (invariante)
+  return {
+    resA, resB, edge,
+    lCA, rCA, bCA, tCA,
+    lCB, rCB, bCB, tCB,
+    KA_factor, KB_factor, KA, KB, dfA, dfB,
+    deltaM, MA_neg, MB_neg, M_edge,
+    Mpos_A_pre, Mpos_B_pre,
+    Mpos_A_adj, Mpos_B_adj,
+    sumA, sumB,
   };
 }
 
@@ -817,6 +999,220 @@ function SectionDiagram({ mode, b_m, d_m, h_m, dp_m, result }) {
   );
 }
 
+/* ── Slab Case Icon ──────────────────────────────────────────────────────── */
+function CaseIcon({ caso, active }) {
+  const [lC, rC, bC, tC] = CASE_EDGES[caso - 1];
+  const W = 40, H = 46, P = 7;
+  const clr = active ? "#fff" : "#1a1e2e";
+  const bg  = active ? "rgba(255,255,255,0.12)" : "#f4f5f7";
+  const thin  = (cont) => cont
+    ? { stroke: clr, strokeWidth: 4, strokeLinecap: "square" }
+    : { stroke: active ? "#bbb" : "#ccc", strokeWidth: 1.5, strokeDasharray: "3,2" };
+  return (
+    <svg width={W} height={H} style={{display:"block",margin:"0 auto"}}>
+      <rect x={P} y={P} width={W-2*P} height={H-2*P} fill={bg} stroke="none"/>
+      <line x1={P} y1={P} x2={W-P} y2={P} {...thin(tC)}/>
+      <line x1={W-P} y1={P} x2={W-P} y2={H-P} {...thin(rC)}/>
+      <line x1={P} y1={H-P} x2={W-P} y2={H-P} {...thin(bC)}/>
+      <line x1={P} y1={P} x2={P} y2={H-P} {...thin(lC)}/>
+    </svg>
+  );
+}
+
+/* ── Slab Diagram ────────────────────────────────────────────────────────── */
+function SlabDiagram({ caso, lx_m, ly_m, result }) {
+  const lx = Math.max(+lx_m || 4, 0.1);
+  const ly = Math.max(+ly_m || 5, lx);
+  const [lC, rC, bC, tC] = CASE_EDGES[caso - 1];
+  const W = 300, H = 260;
+  const PAD = { l:52, r:24, t:24, b:48 };
+  const aW = W - PAD.l - PAD.r, aH = H - PAD.t - PAD.b;
+  const sc = Math.min(aW / lx, aH / ly);
+  const pW = lx * sc, pH = ly * sc;
+  const ox = PAD.l + (aW - pW) / 2;
+  const oy = PAD.t + (aH - pH) / 2;
+  const T  = { fontSize: 10, fontFamily: "Arial, sans-serif", fill: "#333" };
+  const TPOS = { fontSize: 10, fontFamily: "Arial, sans-serif", fill: "#c53030" }; // red = positive
+  const TNEG = { fontSize: 9,  fontFamily: "Arial, sans-serif", fill: "#2c5282" }; // blue = negative
+  const TG = { fontSize: 9,  fontFamily: "Arial, sans-serif", fill: "#888" };
+  const thickEdge = { strokeWidth: 5, stroke: "#1a1e2e" };
+  const thinEdge  = { strokeWidth: 1.5, stroke: "#999" };
+  const fmtM = v => v !== null ? v.toFixed(2) + " kNm/m" : null;
+  const triH = (x1,y1,x2,y2,inside=true) => {
+    const n = Math.max(2, Math.round(Math.hypot(x2-x1,y2-y1)/22));
+    const dx = (y2-y1)/Math.hypot(x2-x1,y2-y1)*(inside?6:-6);
+    const dy = -(x2-x1)/Math.hypot(x2-x1,y2-y1)*(inside?6:-6);
+    return Array.from({length:n},(_,k)=>{
+      const f = (k+0.5)/n, mx=x1+f*(x2-x1), my=y1+f*(y2-y1);
+      const bx=(x2-x1)/n*0.35, by=(y2-y1)/n*0.35;
+      return <polygon key={k} points={`${mx},${my} ${mx-bx+dx},${my-by+dy} ${mx+bx+dx},${my+by+dy}`} fill="#999" stroke="none"/>;
+    });
+  };
+  const edge = (x1,y1,x2,y2,cont,inside=true) => cont
+    ? <line x1={x1} y1={y1} x2={x2} y2={y2} {...thickEdge}/>
+    : <>{<line x1={x1} y1={y1} x2={x2} y2={y2} {...thinEdge}/>}{triH(x1,y1,x2,y2,inside)}</>;
+  const r = result && !result.error ? result : null;
+  return (
+    <svg width={W} height={H} style={{display:"block",margin:"0 auto"}}>
+      {/* Panel fill */}
+      <rect x={ox} y={oy} width={pW} height={pH} fill="#eceef2" stroke="none"/>
+      {/* Edges */}
+      {edge(ox,oy+pH, ox+pW,oy+pH, bC, true)}
+      {edge(ox,oy, ox+pW,oy, tC, false)}
+      {edge(ox,oy, ox,oy+pH, lC, true)}
+      {edge(ox+pW,oy, ox+pW,oy+pH, rC, false)}
+      {/* lx dimension (bottom) */}
+      <line x1={ox} y1={oy+pH+18} x2={ox+pW} y2={oy+pH+18} stroke="#555" strokeWidth={0.8}/>
+      <line x1={ox} y1={oy+pH+13} x2={ox} y2={oy+pH+23} stroke="#555" strokeWidth={0.8}/>
+      <line x1={ox+pW} y1={oy+pH+13} x2={ox+pW} y2={oy+pH+23} stroke="#555" strokeWidth={0.8}/>
+      <polygon points={`${ox+6},${oy+pH+18} ${ox+11},${oy+pH+15} ${ox+11},${oy+pH+21}`} fill="#555"/>
+      <polygon points={`${ox+pW-6},${oy+pH+18} ${ox+pW-11},${oy+pH+15} ${ox+pW-11},${oy+pH+21}`} fill="#555"/>
+      <text x={ox+pW/2} y={oy+pH+32} textAnchor="middle" style={T}>lx = {lx.toFixed(2)} m</text>
+      {/* ly dimension (left) */}
+      <line x1={ox-18} y1={oy} x2={ox-18} y2={oy+pH} stroke="#555" strokeWidth={0.8}/>
+      <line x1={ox-13} y1={oy} x2={ox-23} y2={oy} stroke="#555" strokeWidth={0.8}/>
+      <line x1={ox-13} y1={oy+pH} x2={ox-23} y2={oy+pH} stroke="#555" strokeWidth={0.8}/>
+      <polygon points={`${ox-18},${oy+6} ${ox-15},${oy+11} ${ox-21},${oy+11}`} fill="#555"/>
+      <polygon points={`${ox-18},${oy+pH-6} ${ox-15},${oy+pH-11} ${ox-21},${oy+pH-11}`} fill="#555"/>
+      <text x={ox-30} y={oy+pH/2} textAnchor="middle"
+        transform={`rotate(-90,${ox-30},${oy+pH/2})`} style={T}>ly = {ly.toFixed(2)} m</text>
+      {/* Positive moments — red, at centre */}
+      <text x={ox+pW/2} y={oy+pH/2-(r && r.Msy_pos !== null ? 9 : 0)} textAnchor="middle"
+        style={{...TPOS, fontSize:11, fontWeight:"bold"}}>
+        {r ? "Msx⁺ = "+fmtM(r.Msx_pos) : "Msx⁺"}
+      </text>
+      {r && r.Msy_pos !== null && (
+        <text x={ox+pW/2} y={oy+pH/2+9} textAnchor="middle" style={{...TPOS, fontSize:10}}>
+          {"Msy⁺ = "+fmtM(r.Msy_pos)}
+        </text>
+      )}
+      {/* Negative moments — blue, near continuous edges */}
+      {lC && r && r.Msx_neg !== null && (
+        <text x={ox+15} y={oy+pH/2} textAnchor="middle"
+          transform={`rotate(-90,${ox+15},${oy+pH/2})`} style={TNEG}>
+          Msx⁻ = {fmtM(r.Msx_neg)}
+        </text>
+      )}
+      {rC && r && r.Msx_neg !== null && (
+        <text x={ox+pW-15} y={oy+pH/2} textAnchor="middle"
+          transform={`rotate(-90,${ox+pW-15},${oy+pH/2})`} style={TNEG}>
+          Msx⁻ = {fmtM(r.Msx_neg)}
+        </text>
+      )}
+      {bC && r && r.Msy_neg !== null && (
+        <text x={ox+pW/2} y={oy+pH-12} textAnchor="middle" style={TNEG}>
+          Msy⁻ = {fmtM(r.Msy_neg)}
+        </text>
+      )}
+      {tC && r && r.Msy_neg !== null && (
+        <text x={ox+pW/2} y={oy+18} textAnchor="middle" style={TNEG}>
+          Msy⁻ = {fmtM(r.Msy_neg)}
+        </text>
+      )}
+    </svg>
+  );
+}
+
+/* ── Slab Pair Diagram ───────────────────────────────────────────────────── */
+function SlabPairDiagram({ cA, lxA, lyA, cB, lxB, lyB, edge, result }) {
+  const W = 500, H = 240;
+  const fmtM = v => (v !== null && v !== undefined) ? v.toFixed(2) + " kNm/m" : "—";
+  const T   = { fontSize: 10, fontFamily: "Arial, sans-serif", fill: "#333" };
+  const TPU = { fontSize: 9,  fontFamily: "Arial, sans-serif", fill: "#7c3aed" };
+  const eA  = CASE_EDGES[cA - 1];
+  const eB  = CASE_EDGES[cB - 1];
+  const drawEdge = (x1,y1,x2,y2,cont,shared=false) => {
+    if (shared) return <line x1={x1} y1={y1} x2={x2} y2={y2}
+      strokeWidth={2.5} stroke="#7c3aed" strokeDasharray="6,4" strokeLinecap="square"/>;
+    return cont
+      ? <line x1={x1} y1={y1} x2={x2} y2={y2} strokeWidth={5} stroke="#1a1e2e" strokeLinecap="square"/>
+      : <line x1={x1} y1={y1} x2={x2} y2={y2} strokeWidth={1.5} stroke="#999" strokeDasharray="4,3" strokeLinecap="square"/>;
+  };
+  if (edge === "x") {
+    const lxA_ = Math.max(+lxA||4, 0.1), lyA_ = Math.max(+lyA||5, lxA_);
+    const lxB_ = Math.max(+lxB||4, 0.1), lyB_ = Math.max(+lyB||5, lxB_);
+    const PADH = 28, PADV = 24, GAP = 48;
+    const avW = (W - 2*PADH - GAP) / 2;
+    const avH = H - 2*PADV - 18;
+    const scA = Math.min(avW / lxA_, avH / lyA_);
+    const scB = Math.min(avW / lxB_, avH / lyB_);
+    const pwA = lxA_ * scA, phA = lyA_ * scA;
+    const pwB = lxB_ * scB, phB = lyB_ * scB;
+    const oxA = PADH + avW - pwA;
+    const oyA = PADV + (avH - phA) / 2;
+    const oxB = PADH + avW + GAP;
+    const oyB = PADV + (avH - phB) / 2;
+    const midX = PADH + avW + GAP / 2;
+    const midY = (PADV + H - PADV - 18) / 2;
+    return (
+      <svg width={W} height={H} style={{display:"block",margin:"0 auto"}}>
+        <rect x={oxA} y={oyA} width={pwA} height={phA} fill="#eceef2"/>
+        {drawEdge(oxA,oyA,oxA+pwA,oyA, eA[3])}
+        {drawEdge(oxA,oyA+phA,oxA+pwA,oyA+phA, eA[2])}
+        {drawEdge(oxA,oyA,oxA,oyA+phA, eA[0])}
+        {drawEdge(oxA+pwA,oyA,oxA+pwA,oyA+phA, eA[1], true)}
+        <text x={oxA+pwA/2} y={oyA+phA/2} textAnchor="middle" dominantBaseline="middle"
+          style={{...T,fontWeight:"bold",fontSize:14}}>A</text>
+        <text x={oxA+pwA/2} y={H-6} textAnchor="middle" style={T}>lx={lxA_} m</text>
+        <rect x={oxB} y={oyB} width={pwB} height={phB} fill="#eceef2"/>
+        {drawEdge(oxB,oyB,oxB+pwB,oyB, eB[3])}
+        {drawEdge(oxB,oyB+phB,oxB+pwB,oyB+phB, eB[2])}
+        {drawEdge(oxB+pwB,oyB,oxB+pwB,oyB+phB, eB[1])}
+        {drawEdge(oxB,oyB,oxB,oyB+phB, eB[0], true)}
+        <text x={oxB+pwB/2} y={oyB+phB/2} textAnchor="middle" dominantBaseline="middle"
+          style={{...T,fontWeight:"bold",fontSize:14}}>B</text>
+        <text x={oxB+pwB/2} y={H-6} textAnchor="middle" style={T}>lx={lxB_} m</text>
+        <line x1={midX} y1={PADV} x2={midX} y2={H-PADV-14} stroke="#c4b5fd" strokeWidth={0.8} strokeDasharray="3,3"/>
+        {result && !result.error && (
+          <text x={midX} y={midY} textAnchor="middle"
+            transform={`rotate(-90,${midX},${midY})`} style={TPU}>
+            M⁻ = {fmtM(result.M_edge)}
+          </text>
+        )}
+      </svg>
+    );
+  } else {
+    const lxA_ = Math.max(+lxA||4, 0.1), lyA_ = Math.max(+lyA||5, lxA_);
+    const lxB_ = Math.max(+lxB||4, 0.1), lyB_ = Math.max(+lyB||5, lxB_);
+    const PADH = 28, PADV = 16, GAP = 40;
+    const avW = W - 2*PADH;
+    const avH = (H - 2*PADV - GAP) / 2;
+    const scA = Math.min(avW / lxA_, avH / lyA_);
+    const scB = Math.min(avW / lxB_, avH / lyB_);
+    const pwA = lxA_ * scA, phA = lyA_ * scA;
+    const pwB = lxB_ * scB, phB = lyB_ * scB;
+    const oxA = PADH + (avW - pwA) / 2;
+    const oyA = PADV + (avH - phA);
+    const oxB = PADH + (avW - pwB) / 2;
+    const oyB = PADV + avH + GAP;
+    const midY = PADV + avH + GAP / 2;
+    return (
+      <svg width={W} height={H} style={{display:"block",margin:"0 auto"}}>
+        <rect x={oxA} y={oyA} width={pwA} height={phA} fill="#eceef2"/>
+        {drawEdge(oxA,oyA,oxA+pwA,oyA, eA[3])}
+        {drawEdge(oxA,oyA,oxA,oyA+phA, eA[0])}
+        {drawEdge(oxA+pwA,oyA,oxA+pwA,oyA+phA, eA[1])}
+        {drawEdge(oxA,oyA+phA,oxA+pwA,oyA+phA, eA[2], true)}
+        <text x={oxA+pwA/2} y={oyA+phA/2} textAnchor="middle" dominantBaseline="middle"
+          style={{...T,fontWeight:"bold",fontSize:14}}>A</text>
+        <rect x={oxB} y={oyB} width={pwB} height={phB} fill="#eceef2"/>
+        {drawEdge(oxB,oyB+phB,oxB+pwB,oyB+phB, eB[2])}
+        {drawEdge(oxB,oyB,oxB,oyB+phB, eB[0])}
+        {drawEdge(oxB+pwB,oyB,oxB+pwB,oyB+phB, eB[1])}
+        {drawEdge(oxB,oyB,oxB+pwB,oyB, eB[3], true)}
+        <text x={oxB+pwB/2} y={oyB+phB/2} textAnchor="middle" dominantBaseline="middle"
+          style={{...T,fontWeight:"bold",fontSize:14}}>B</text>
+        <line x1={PADH} y1={midY} x2={W-PADH} y2={midY} stroke="#c4b5fd" strokeWidth={0.8} strokeDasharray="3,3"/>
+        {result && !result.error && (
+          <text x={W/2} y={midY-4} textAnchor="middle" style={TPU}>
+            M⁻ = {fmtM(result.M_edge)}
+          </text>
+        )}
+      </svg>
+    );
+  }
+}
+
 /* ── UI helpers ─────────────────────────────────────────────────────────── */
 function Field({ label, note, children }) {
   return (
@@ -848,9 +1244,9 @@ function Sel({ label, value, onChange, options }) {
     </Field>
   );
 }
-function Row({ name, sub, value, unit, hl, ok, err }) {
-  const cls = "result-row" + (hl?" hl":"") + (ok?" ok-row":"") + (err?" err-row":"");
-  const valCls = "result-val" + (hl?" hl":"") + (ok?" ok":"") + (err?" err":"");
+function Row({ name, sub, value, unit, hl, ok, err, pos }) {
+  const cls = "result-row" + (hl?" hl":"") + (ok?" ok-row":"") + (err?" err-row":"") + (pos?" pos-row":"");
+  const valCls = "result-val" + (hl?" hl":"") + (ok?" ok":"") + (err?" err":"") + (pos?" pos":"");
   return (
     <div className={cls}>
       <div>
@@ -905,6 +1301,18 @@ function App() {
   const [fp_userBx,  setFpUserBx]  = useState("1.60");
   const [fp_userBy,  setFpUserBy]  = useState("1.60");
 
+  /* Slab (Reg. Britânico) state */
+  const [sl_caso, setSlCaso]  = useState(1);
+  const [sl_lx,   setSlLx]    = useState("4.0");
+  const [sl_ly,   setSlLy]    = useState("5.0");
+  const [sl_Sd,   setSlSd]    = useState("10.0");
+  const [slMode,  setSlMode]  = useState("single");
+  const [sl_edge, setSlEdge]  = useState("x");
+  const [sl2_caso, setSlCaso2] = useState(3);
+  const [sl2_lx,  setSlLx2]   = useState("4.0");
+  const [sl2_ly,  setSlLy2]   = useState("6.0");
+  const [sl2_Sd,  setSlSd2]   = useState("10.0");
+
   React.useEffect(() => {
     if (Math.abs(+fp_MEdY) > 1e-9 && fp_type === "quad") setFpType("hom");
   }, [fp_MEdY]);
@@ -927,6 +1335,12 @@ function App() {
   /* Footing plan result */
   const fpResult = mode === "footplan"
     ? solveFootingPlan(+fp_NEd, +fp_MEdY, +fp_sigmAdm, +fp_bxC, +fp_byC, fp_type, fp_manual, +fp_userBx, +fp_userBy)
+    : null;
+
+  /* Slab result */
+  const slabResult = mode === "slab" ? solveSlab(sl_caso, +sl_lx, +sl_ly, +sl_Sd) : null;
+  const slabPairResult = mode === "slab" && slMode === "pair"
+    ? solveSlabPair(sl_caso, +sl_lx, +sl_ly, +sl_Sd, sl2_caso, +sl2_lx, +sl2_ly, +sl2_Sd, sl_edge)
     : null;
 
   /* Bending section props */
@@ -958,6 +1372,9 @@ function App() {
 
       {/* Mode */}
       <div className="mode-row">
+        <button className={"mode-btn"+(mode==="slab"?" active":"")} onClick={()=>setMode("slab")}>
+          Lajes &nbsp;(Reg. Britânico)
+        </button>
         <button className={"mode-btn"+(mode==="simple"?" active":"")} onClick={()=>setMode("simple")}>
           Flexão Simples &nbsp;(M)
         </button>
@@ -1399,6 +1816,325 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* ════════════ SLAB MODE (REG. BRITÂNICO) ════════════ */}
+      {mode === "slab" && (<>
+        {/* Sub-mode toggle */}
+        <div className="sigma-toggle" style={{marginBottom:16}}>
+          <button className={slMode==="single"?"active":""} onClick={()=>setSlMode("single")}>
+            Painel único
+          </button>
+          <button className={slMode==="pair"?"active":""} onClick={()=>setSlMode("pair")}>
+            Dois painéis adjacentes
+          </button>
+        </div>
+
+        {/* ── Single panel ── */}
+        {slMode === "single" && (
+          <div className="layout">
+            {/* Left: inputs */}
+            <div>
+              <div className="panel">
+                <div className="panel-title">Tipo de painel — Caso</div>
+                <div className="slab-case-grid">
+                  {Array.from({length:9},(_,i)=>i+1).map(c=>(
+                    <button key={c} className={"slab-case-btn"+(sl_caso===c?" active":"")}
+                      onClick={()=>setSlCaso(c)}>
+                      <div className="slab-case-num">Caso {c}</div>
+                      <CaseIcon caso={c} active={sl_caso===c}/>
+                    </button>
+                  ))}
+                </div>
+                <div style={{fontSize:12,fontFamily:"Arial,sans-serif",color:"#444",marginTop:4,lineHeight:1.4}}>
+                  {CASE_LABELS[sl_caso-1]}
+                </div>
+                <div style={{fontSize:11,fontFamily:"Arial,sans-serif",color:"#888",marginTop:6,lineHeight:1.5}}>
+                  Lado espesso = contínuo &nbsp;·&nbsp; Lado fino = descontínuo
+                </div>
+              </div>
+
+              <div className="panel">
+                <div className="panel-title">Geometria</div>
+                <Num label="Vão menor  lx" value={sl_lx} onChange={setSlLx} unit="m" step="0.25"
+                  note="Vão mais curto (lx ≤ ly)"/>
+                <Num label="Vão maior  ly" value={sl_ly} onChange={setSlLy} unit="m" step="0.25"
+                  note="Vão mais longo (ly ≥ lx)"/>
+                {slabResult && !slabResult.error && (
+                  <div className="field-note" style={{marginTop:6,color:"#2c5282"}}>
+                    Relação  ly / lx = {slabResult.ratio.toFixed(3)}
+                  </div>
+                )}
+              </div>
+
+              <div className="panel">
+                <div className="panel-title">Carga de cálculo</div>
+                <Num label="Carga  Sd" value={sl_Sd} onChange={setSlSd} unit="kN/m²" step="0.5"
+                  note="Carga uniformemente distribuída de cálculo — uniforme em todos os painéis"/>
+              </div>
+            </div>
+
+            {/* Right: diagram + results */}
+            <div>
+              <div className="diagram-panel">
+                <div className="panel-title">Planta do painel — condições de apoio e momentos</div>
+                <SlabDiagram caso={sl_caso} lx_m={+sl_lx} ly_m={+sl_ly} result={slabResult}/>
+                <div className="diagram-caption">
+                  lx = vão menor (horizontal) &nbsp;·&nbsp; ly = vão maior (vertical) &nbsp;·&nbsp;
+                  <span style={{color:"#c53030"}}>Vermelho = M⁺ (vão)</span> &nbsp;·&nbsp;
+                  <span style={{color:"#2c5282"}}>Azul = M⁻ (apoio contínuo)</span>
+                </div>
+              </div>
+
+              <div className="results-panel">
+                <div className="panel-title">Esforços — Reg. Britânico · Quadro 1 &amp; 2</div>
+
+                {slabResult && slabResult.error ? (
+                  <div className="error-box">⚠  {slabResult.error}</div>
+                ) : slabResult ? (<>
+
+                  {slabResult.warn2 && (
+                    <div className="warn-box">⚠ {slabResult.warn2}</div>
+                  )}
+
+                  <div className="section-label">Coeficientes interpolados (ly/lx = {slabResult.r.toFixed(3)})</div>
+                  {slabResult.betaSx_neg !== null && (
+                    <Row name="βsx  — momento negativo (apoio contínuo, dir. x)"
+                      sub={`interpolado para ly/lx = ${slabResult.r.toFixed(3)}`}
+                      value={slabResult.betaSx_neg.toFixed(4)}/>
+                  )}
+                  <Row name="βsx  — momento positivo (meio vão, dir. x)"
+                    sub={`interpolado para ly/lx = ${slabResult.r.toFixed(3)}`}
+                    value={slabResult.betaSx_pos.toFixed(4)}/>
+                  {slabResult.bsy_neg !== null && (
+                    <Row name="βsy  — momento negativo (apoio contínuo, dir. y)"
+                      sub="constante para todos os valores de ly/lx"
+                      value={slabResult.bsy_neg.toFixed(4)}/>
+                  )}
+                  <Row name="βsy  — momento positivo (meio vão, dir. y)"
+                    sub="constante para todos os valores de ly/lx"
+                    value={slabResult.bsy_pos.toFixed(4)}/>
+
+                  <div className="section-label">Momentos no vão menor — direcção x  (Msx = βsx · Sd · lx²)</div>
+                  {slabResult.Msx_neg !== null ? (
+                    <Row name="Msx⁻  — momento negativo  (apoio contínuo)"
+                      sub={`= ${slabResult.betaSx_neg.toFixed(4)} × ${(+sl_Sd).toFixed(2)} × ${(+sl_lx).toFixed(2)}²`}
+                      value={slabResult.Msx_neg.toFixed(3)} unit="kNm/m" hl/>
+                  ) : (
+                    <div style={{fontSize:11,fontFamily:"Arial,sans-serif",color:"#888",padding:"4px 0"}}>
+                      Msx⁻ — sem apoios contínuos na direcção x neste caso
+                    </div>
+                  )}
+                  <Row name="Msx⁺  — momento positivo  (meio vão)"
+                    sub={`= ${slabResult.betaSx_pos.toFixed(4)} × ${(+sl_Sd).toFixed(2)} × ${(+sl_lx).toFixed(2)}²`}
+                    value={slabResult.Msx_pos.toFixed(3)} unit="kNm/m" pos/>
+
+                  <div className="section-label">Momentos no vão maior — direcção y  (Msy = βsy · Sd · lx²)</div>
+                  {slabResult.Msy_neg !== null ? (
+                    <Row name="Msy⁻  — momento negativo  (apoio contínuo)"
+                      sub={`= ${slabResult.bsy_neg.toFixed(4)} × ${(+sl_Sd).toFixed(2)} × ${(+sl_lx).toFixed(2)}²`}
+                      value={slabResult.Msy_neg.toFixed(3)} unit="kNm/m" hl/>
+                  ) : (
+                    <div style={{fontSize:11,fontFamily:"Arial,sans-serif",color:"#888",padding:"4px 0"}}>
+                      Msy⁻ — sem apoios contínuos na direcção y neste caso
+                    </div>
+                  )}
+                  <Row name="Msy⁺  — momento positivo  (meio vão)"
+                    sub={`= ${slabResult.bsy_pos.toFixed(4)} × ${(+sl_Sd).toFixed(2)} × ${(+sl_lx).toFixed(2)}²`}
+                    value={slabResult.Msy_pos.toFixed(3)} unit="kNm/m" pos/>
+
+                  <div className="section-label">Reacções por metro linear  (vsx = βvx · Sd · lx ; vsy = βvy · Sd · lx)</div>
+                  {slabResult.vsx_cont !== null && (
+                    <Row name="vsx  — lados maiores contínuos  (βvx_cont)"
+                      sub={`= ${slabResult.betaVxCont.toFixed(3)} × ${(+sl_Sd).toFixed(2)} × ${(+sl_lx).toFixed(2)}`}
+                      value={slabResult.vsx_cont.toFixed(3)} unit="kN/m"/>
+                  )}
+                  {slabResult.vsx_disc !== null && (
+                    <Row name="vsx  — lados maiores descontínuos  (βvx_disc)"
+                      sub={`= ${slabResult.betaVxDisc.toFixed(3)} × ${(+sl_Sd).toFixed(2)} × ${(+sl_lx).toFixed(2)}`}
+                      value={slabResult.vsx_disc.toFixed(3)} unit="kN/m"/>
+                  )}
+                  {slabResult.vsy_cont !== null && (
+                    <Row name="vsy  — lados menores contínuos  (βvy_cont)"
+                      sub={`= ${slabResult.betaVyCont.toFixed(3)} × ${(+sl_Sd).toFixed(2)} × ${(+sl_lx).toFixed(2)}`}
+                      value={slabResult.vsy_cont.toFixed(3)} unit="kN/m"/>
+                  )}
+                  {slabResult.vsy_disc !== null && (
+                    <Row name="vsy  — lados menores descontínuos  (βvy_disc)"
+                      sub={`= ${slabResult.betaVyDisc.toFixed(3)} × ${(+sl_Sd).toFixed(2)} × ${(+sl_lx).toFixed(2)}`}
+                      value={slabResult.vsy_disc.toFixed(3)} unit="kN/m"/>
+                  )}
+
+                  <div className="ec2-note">
+                    Msx = βsx · Sd · lx² &nbsp;·&nbsp; Msy = βsy · Sd · lx² &nbsp;·&nbsp;
+                    vsx = βvx · Sd · lx &nbsp;·&nbsp; vsy = βvy · Sd · lx<br/>
+                    lx ≤ ly &nbsp;·&nbsp; Sd = carga de cálculo uniformemente distribuída &nbsp;·&nbsp;
+                    Quadros 1 e 2 — Reg. Britânico (BS 8110)
+                  </div>
+                </>) : null}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Two-panel redistribution ── */}
+        {slMode === "pair" && (
+          <div className="layout">
+            {/* Left: inputs */}
+            <div>
+              <div className="panel">
+                <div className="panel-title">Painel A</div>
+                <Field label="Caso">
+                  <select value={sl_caso} onChange={e=>setSlCaso(+e.target.value)}>
+                    {CASE_LABELS.map((l,i)=>(
+                      <option key={i} value={i+1}>Caso {i+1} — {l}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Num label="lx — vão menor" value={sl_lx} onChange={setSlLx} unit="m" step="0.25"/>
+                <Num label="ly — vão maior" value={sl_ly} onChange={setSlLy} unit="m" step="0.25"/>
+                <Num label="Sd — carga de cálculo" value={sl_Sd} onChange={setSlSd} unit="kN/m²" step="0.5"/>
+              </div>
+
+              <div className="panel">
+                <div className="panel-title">Bordo partilhado</div>
+                <div style={{fontSize:12,fontFamily:"Arial,sans-serif",color:"#555",marginBottom:8}}>
+                  Direcção do bordo de interface:
+                </div>
+                <div className="sigma-toggle" style={{marginBottom:8}}>
+                  <button className={sl_edge==="x"?"active":""} onClick={()=>setSlEdge("x")}>
+                    Lados maiores  (x)
+                  </button>
+                  <button className={sl_edge==="y"?"active":""} onClick={()=>setSlEdge("y")}>
+                    Lados menores  (y)
+                  </button>
+                </div>
+                <div className="field-note">
+                  {sl_edge==="x"
+                    ? "Bordo vertical partilhado — A à esquerda, B à direita. Redistribuição de Msx⁻."
+                    : "Bordo horizontal partilhado — A em cima, B em baixo. Redistribuição de Msy⁻."}
+                </div>
+              </div>
+
+              <div className="panel">
+                <div className="panel-title">Painel B</div>
+                <Field label="Caso">
+                  <select value={sl2_caso} onChange={e=>setSlCaso2(+e.target.value)}>
+                    {CASE_LABELS.map((l,i)=>(
+                      <option key={i} value={i+1}>Caso {i+1} — {l}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Num label="lx — vão menor" value={sl2_lx} onChange={setSlLx2} unit="m" step="0.25"/>
+                <Num label="ly — vão maior" value={sl2_ly} onChange={setSlLy2} unit="m" step="0.25"/>
+                <Num label="Sd — carga de cálculo" value={sl2_Sd} onChange={setSlSd2} unit="kN/m²" step="0.5"/>
+              </div>
+            </div>
+
+            {/* Right: diagram + results */}
+            <div>
+              <div className="diagram-panel">
+                <div className="panel-title">Planta dos dois painéis</div>
+                <SlabPairDiagram cA={sl_caso} lxA={+sl_lx} lyA={+sl_ly}
+                  cB={sl2_caso} lxB={+sl2_lx} lyB={+sl2_ly}
+                  edge={sl_edge} result={slabPairResult}/>
+                <div className="diagram-caption">
+                  Lado espesso = contínuo &nbsp;·&nbsp; Lado fino = descontínuo &nbsp;·&nbsp;
+                  <span style={{color:"#7c3aed"}}>Bordo roxo = interface redistribuído</span>
+                </div>
+              </div>
+
+              <div className="results-panel">
+                <div className="panel-title">Redistribuição de momento no bordo partilhado</div>
+
+                {slabPairResult && slabPairResult.error ? (
+                  <div className="error-box">⚠ {slabPairResult.error}</div>
+                ) : slabPairResult ? (<>
+
+                  <div className="section-label">Momentos iniciais no bordo partilhado (tabela BS, sem redistribuição)</div>
+                  {sl_edge === "x" ? (<>
+                    <Row name="Painel A — Msx⁻ no bordo direito (partilhado)"
+                      sub={slabPairResult.rCA ? "bordo contínuo — valor de tabela BS" : "bordo descontínuo — M⁻ = 0 (sem encastramento)"}
+                      value={slabPairResult.MA_neg.toFixed(3)} unit="kNm/m"/>
+                    <Row name="Painel B — Msx⁻ no bordo esquerdo (partilhado)"
+                      sub={slabPairResult.lCB ? "bordo contínuo — valor de tabela BS" : "bordo descontínuo — M⁻ = 0 (sem encastramento)"}
+                      value={slabPairResult.MB_neg.toFixed(3)} unit="kNm/m"/>
+                  </>) : (<>
+                    <Row name="Painel A — Msy⁻ no bordo superior (partilhado)"
+                      sub={slabPairResult.tCA ? "bordo contínuo — valor de tabela BS" : "bordo descontínuo — M⁻ = 0 (sem encastramento)"}
+                      value={slabPairResult.MA_neg.toFixed(3)} unit="kNm/m"/>
+                    <Row name="Painel B — Msy⁻ no bordo inferior (partilhado)"
+                      sub={slabPairResult.bCB ? "bordo contínuo — valor de tabela BS" : "bordo descontínuo — M⁻ = 0 (sem encastramento)"}
+                      value={slabPairResult.MB_neg.toFixed(3)} unit="kNm/m"/>
+                  </>)}
+
+                  <div className="section-label">Rigidezes de distribuição  (K = α·EI/L — espessura uniforme)</div>
+                  <Row name="KA  — Painel A"
+                    sub={`α = ${slabPairResult.KA_factor}  (extremo distante de A: ${sl_edge==="x" ? (slabPairResult.lCA?"contínuo → α=4":"descontínuo → α=3") : (slabPairResult.bCA?"contínuo → α=4":"descontínuo → α=3")})`}
+                    value={slabPairResult.KA.toFixed(4)} unit="m⁻¹"/>
+                  <Row name="KB  — Painel B"
+                    sub={`α = ${slabPairResult.KB_factor}  (extremo distante de B: ${sl_edge==="x" ? (slabPairResult.rCB?"contínuo → α=4":"descontínuo → α=3") : (slabPairResult.tCB?"contínuo → α=4":"descontínuo → α=3")})`}
+                    value={slabPairResult.KB.toFixed(4)} unit="m⁻¹"/>
+                  <Row name="Coef. distribuição A  =  KA / (KA + KB)"
+                    value={slabPairResult.dfA.toFixed(4)}/>
+                  <Row name="Coef. distribuição B  =  KB / (KA + KB)"
+                    value={slabPairResult.dfB.toFixed(4)}/>
+
+                  <div className="section-label">Momento redistribuído no bordo partilhado</div>
+                  <Row name="ΔM  =  MA⁻ − MB⁻  (diferença de momentos no bordo)"
+                    sub={`= ${slabPairResult.MA_neg.toFixed(3)} − ${slabPairResult.MB_neg.toFixed(3)}`}
+                    value={slabPairResult.deltaM.toFixed(3)} unit="kNm/m"/>
+                  <Row name="M⁻bordo  =  MA⁻ − dfA · ΔM  =  dfB · MA⁻ + dfA · MB⁻"
+                    sub={`= ${slabPairResult.MA_neg.toFixed(3)} − ${slabPairResult.dfA.toFixed(4)} × ${slabPairResult.deltaM.toFixed(3)}  =  ${slabPairResult.dfB.toFixed(4)} × ${slabPairResult.MA_neg.toFixed(3)} + ${slabPairResult.dfA.toFixed(4)} × ${slabPairResult.MB_neg.toFixed(3)}`}
+                    value={slabPairResult.M_edge.toFixed(3)} unit="kNm/m" hl/>
+
+                  {sl_edge === "x" ? (<>
+                    <div className="section-label">Momentos de vão ajustados — direcção x</div>
+                    <div style={{fontSize:11,fontFamily:"Arial,sans-serif",color:"#555",padding:"4px 0 6px",lineHeight:1.5}}>
+                      Invariante: M⁺<sub>adj</sub> + M⁻<sub>bordo</sub> = M⁺<sub>BS</sub> + M⁻<sub>BS,partilhado</sub>
+                    </div>
+                    <Row name="Painel A — Msx⁺ ajustado  (+  dfA · ΔM)"
+                      sub={`= ${slabPairResult.Mpos_A_pre.toFixed(3)} + ${slabPairResult.dfA.toFixed(4)} × ${slabPairResult.deltaM.toFixed(3)}`}
+                      value={slabPairResult.Mpos_A_adj.toFixed(3)} unit="kNm/m" pos/>
+                    <Row name="Verificação A:  Msx⁺adj + M⁻bordo"
+                      sub={`${slabPairResult.Mpos_A_adj.toFixed(3)} + ${slabPairResult.M_edge.toFixed(3)} = ${slabPairResult.sumA.toFixed(3)}  ✓  (= Msx⁺BS + Msx⁻BS = ${slabPairResult.Mpos_A_pre.toFixed(3)} + ${slabPairResult.MA_neg.toFixed(3)})`}
+                      value={slabPairResult.sumA.toFixed(3)} unit="kNm/m"/>
+                    <Row name="Painel B — Msx⁺ ajustado  (−  dfB · ΔM)"
+                      sub={`= ${slabPairResult.Mpos_B_pre.toFixed(3)} − ${slabPairResult.dfB.toFixed(4)} × ${slabPairResult.deltaM.toFixed(3)}`}
+                      value={slabPairResult.Mpos_B_adj.toFixed(3)} unit="kNm/m" pos/>
+                    <Row name="Verificação B:  Msx⁺adj + M⁻bordo"
+                      sub={`${slabPairResult.Mpos_B_adj.toFixed(3)} + ${slabPairResult.M_edge.toFixed(3)} = ${slabPairResult.sumB.toFixed(3)}  ✓  (= Msx⁺BS + Msx⁻BS = ${slabPairResult.Mpos_B_pre.toFixed(3)} + ${slabPairResult.MB_neg.toFixed(3)})`}
+                      value={slabPairResult.sumB.toFixed(3)} unit="kNm/m"/>
+                  </>) : (<>
+                    <div className="section-label">Momentos de vão ajustados — direcção y</div>
+                    <div style={{fontSize:11,fontFamily:"Arial,sans-serif",color:"#555",padding:"4px 0 6px",lineHeight:1.5}}>
+                      Invariante: M⁺<sub>adj</sub> + M⁻<sub>bordo</sub> = M⁺<sub>BS</sub> + M⁻<sub>BS,partilhado</sub>
+                    </div>
+                    <Row name="Painel A — Msy⁺ ajustado  (+  dfA · ΔM)"
+                      sub={`= ${slabPairResult.Mpos_A_pre.toFixed(3)} + ${slabPairResult.dfA.toFixed(4)} × ${slabPairResult.deltaM.toFixed(3)}`}
+                      value={slabPairResult.Mpos_A_adj.toFixed(3)} unit="kNm/m" pos/>
+                    <Row name="Verificação A:  Msy⁺adj + M⁻bordo"
+                      sub={`${slabPairResult.Mpos_A_adj.toFixed(3)} + ${slabPairResult.M_edge.toFixed(3)} = ${slabPairResult.sumA.toFixed(3)}  ✓  (= Msy⁺BS + Msy⁻BS = ${slabPairResult.Mpos_A_pre.toFixed(3)} + ${slabPairResult.MA_neg.toFixed(3)})`}
+                      value={slabPairResult.sumA.toFixed(3)} unit="kNm/m"/>
+                    <Row name="Painel B — Msy⁺ ajustado  (−  dfB · ΔM)"
+                      sub={`= ${slabPairResult.Mpos_B_pre.toFixed(3)} − ${slabPairResult.dfB.toFixed(4)} × ${slabPairResult.deltaM.toFixed(3)}`}
+                      value={slabPairResult.Mpos_B_adj.toFixed(3)} unit="kNm/m" pos/>
+                    <Row name="Verificação B:  Msy⁺adj + M⁻bordo"
+                      sub={`${slabPairResult.Mpos_B_adj.toFixed(3)} + ${slabPairResult.M_edge.toFixed(3)} = ${slabPairResult.sumB.toFixed(3)}  ✓  (= Msy⁺BS + Msy⁻BS = ${slabPairResult.Mpos_B_pre.toFixed(3)} + ${slabPairResult.MB_neg.toFixed(3)})`}
+                      value={slabPairResult.sumB.toFixed(3)} unit="kNm/m"/>
+                  </>)}
+
+                  <div className="ec2-note">
+                    K = α · EI / L &nbsp;·&nbsp; α = 4 (extremo contínuo) &nbsp;·&nbsp; α = 3 (extremo descontínuo) &nbsp;·&nbsp; espessura uniforme — EI cancela-se<br/>
+                    ΔM = MA⁻ − MB⁻ &nbsp;·&nbsp; M⁻bordo = MA⁻ − dfA · ΔM = dfB · MA⁻ + dfA · MB⁻ &nbsp;·&nbsp; (Hardy Cross, 1 ciclo)<br/>
+                    M⁺adj_A = M⁺BS_A + dfA · ΔM &nbsp;·&nbsp; M⁺adj_B = M⁺BS_B − dfB · ΔM<br/>
+                    Invariante: M⁺adj + M⁻bordo = M⁺BS + M⁻BS,partilhado &nbsp;·&nbsp; Reg. Britânico (BS 8110)
+                  </div>
+                </>) : null}
+              </div>
+            </div>
+          </div>
+        )}
+      </>)}
 
       {/* ════════════ BENDING MODES ════════════ */}
       {(mode === "simple" || mode === "composed") && (
